@@ -25,7 +25,7 @@ namespace EmployeeNetCoreApp.Data
             );
             modelBuilder.Entity<Employee>()
                 .Property(b => b.CreateDate)
-                .HasDefaultValue(DateTime.Now);
+                .HasDefaultValue(DateTime.UtcNow);
             modelBuilder.Entity<Employee>()
                 .Property(b => b.CreatedBy)
                 .HasDefaultValue(1);
@@ -35,7 +35,11 @@ namespace EmployeeNetCoreApp.Data
             modelBuilder.Entity<Employee>()
              .Property(b => b.UpdatedDate)
              .HasDefaultValue(null);
+            modelBuilder.Entity<Employee>()
+                .Property(p => p.Version)
+                .HasDefaultValue(1);
         }
+        
     }
 }
 

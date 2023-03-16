@@ -1,0 +1,2 @@
+user create "admin" -p "password" -g admin
+user create "observer" -p "password" -g monitor

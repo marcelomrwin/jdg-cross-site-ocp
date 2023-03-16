@@ -4,6 +4,7 @@ using EmployeeNetCoreApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeNetCoreApp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230315192003_DbInitializationWithSeedUpdated")]
+    partial class DbInitializationWithSeedUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,7 +74,7 @@ namespace EmployeeNetCoreApp.Migrations
                     b.Property<DateTime?>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2023, 3, 16, 1, 16, 56, 757, DateTimeKind.Utc).AddTicks(2940));
+                        .HasDefaultValue(new DateTime(2023, 3, 15, 20, 20, 3, 675, DateTimeKind.Local).AddTicks(3920));
 
                     b.Property<int?>("CreatedBy")
                         .ValueGeneratedOnAdd()
@@ -91,10 +94,6 @@ namespace EmployeeNetCoreApp.Migrations
                     b.Property<int?>("Status")
                         .HasColumnType("int");
 
-                    b.Property<string>("UUID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
 
@@ -102,9 +101,7 @@ namespace EmployeeNetCoreApp.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Version")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
+                        .HasColumnType("int");
 
                     b.HasKey("EmployeeId");
 

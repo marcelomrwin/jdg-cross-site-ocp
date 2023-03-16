@@ -10,13 +10,15 @@ namespace EmployeeNetCoreApp.Model
         [Key]
         public int EmployeeId { get; set; }
         public string FullName { get; set; }
-        public string Designation { get; set; }
+        public string? Designation { get; set; }
         public int? Department { get; set; }
         public int? Status { get; set; }
         public DateTime? CreateDate { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public int? UpdatedBy { get; set; }
+        public int Version { get; set; }
+        public string? UUID { get; set; }
     }
 }
 

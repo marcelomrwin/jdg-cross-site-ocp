@@ -1,5 +1,6 @@
 ﻿using EmployeeNetCoreApp.Data;
 using EmployeeNetCoreApp.Model;
+using EmployeeNetCoreApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,37 +9,28 @@ namespace EmployeeNetCoreApp.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
-{
-    private readonly DataContext context;
-
+{    
+    private readonly IEmployeeService employeeService;
     private readonly ILogger<EmployeesController> logger;
 
-    public EmployeesController(DataContext pContext, ILogger<EmployeesController> pLogger)
-    {
-        context = pContext;
+    public EmployeesController(IEmployeeService pEmployeeService, ILogger<EmployeesController> pLogger)
+    {        
         logger = pLogger;
+        employeeService = pEmployeeService;
     }
 
     // GET: api/Employees
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
+    public async Task<IEnumerable<Employee>> GetEmployees()
     {
-        if (context.Employees == null)
-        {
-            return NotFound();
-        }
-        return await context.Employees.ToListAsync();
+        return await employeeService.GetEmployees();
     }
 
     // GET: api/Employees/1
     [HttpGet("{id}")]
     public async Task<ActionResult<Employee>> GetEmployee(int id)
     {
-        if (context.Employees == null)
-        {
-            return NotFound();
-        }
-        var employee = await context.Employees.FindAsync(id);
+        var employee = await employeeService.GetEmployee(id);
 
         if (employee == null)
         {
@@ -54,25 +46,17 @@ public class EmployeesController : ControllerBase
     {
         if (id != employee.EmployeeId)
         {
+            logger.LogWarning("EmployeeId must not be null or different of {id}", id);
             return BadRequest();
         }
 
-        context.Entry(employee).State = EntityState.Modified;
-
         try
         {
-            await context.SaveChangesAsync();
+            await employeeService.UpdateEmployee(employee);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateException dbue)
         {
-            if (!EmployeeExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound(dbue.Message);
         }
 
         return Ok("Updated the Employee successfully !");
@@ -82,12 +66,15 @@ public class EmployeesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Employee>> PostEmployee(Employee employee)
     {
-        if (context.Employees == null)
+        try
         {
-            return Problem("Entity set 'DataContext.Employees'  is null.");
+            await employeeService.SaveEmployee(employee);
         }
-        context.Employees.Add(employee);
-        await context.SaveChangesAsync();
+        catch (Exception ex)
+        {
+            logger.LogError(ex.Message);
+            return Problem("Problem with Entity set 'DataContext.Employees'");
+        }
 
         return CreatedAtAction("GetEmployee", new { id = employee.EmployeeId }, employee);
     }
@@ -96,25 +83,16 @@ public class EmployeesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEmployee(int id)
     {
-        if (context.Employees == null)
+        try
         {
-            return NotFound();
+            await employeeService.DeleteEmployee(id);
         }
-        var employee = await context.Employees.FindAsync(id);
-        if (employee == null)
+        catch (DbUpdateException dbue)
         {
-            return NotFound();
+            return NotFound(dbue.Message);
         }
-
-        context.Employees.Remove(employee);
-        await context.SaveChangesAsync();
 
         return Ok("Deleted the Employee successfully !");
-    }
-
-    private bool EmployeeExists(int id) 
-    {
-        return (context.Employees?.Any(e => e.EmployeeId == id)).GetValueOrDefault();
     }
 
 }
