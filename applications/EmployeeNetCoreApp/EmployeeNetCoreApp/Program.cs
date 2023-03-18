@@ -32,6 +32,7 @@ infinispan.Password = cacheConfiguration.Password;
 infinispan.User = cacheConfiguration.User;
 infinispan.AuthMech = "PLAIN";
 infinispan.ClientIntelligence = 0x03;
+infinispan.UseTLS = true;
 
 builder.Services.AddSingleton(infinispan);
 
@@ -48,6 +49,13 @@ builder.Services.AddInfinispanCache(options =>
 builder.Services.AddSingleton<CacheSyncService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<CacheSyncService>());
 
+builder.Services.AddLogging(option =>
+{
+    option.AddConsole(c =>
+    {
+        c.TimestampFormat = "[yyyy/MM/dd HH:mm:ss]";                
+    });
+});
 
 var app = builder.Build();
 

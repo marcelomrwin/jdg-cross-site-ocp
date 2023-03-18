@@ -1,4 +1,5 @@
 ﻿using EmployeeNetCoreApp.Data;
+using EmployeeNetCoreApp.Exceptions;
 using EmployeeNetCoreApp.Model;
 using EmployeeNetCoreApp.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +55,10 @@ public class EmployeesController : ControllerBase
         {
             await employeeService.UpdateEmployee(employee);
         }
+        catch (EntityOutdatedException eoe)
+        {
+            return BadRequest(eoe.Message());
+        }
         catch (DbUpdateException dbue)
         {
             return NotFound(dbue.Message);
@@ -72,8 +77,8 @@ public class EmployeesController : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message);
-            return Problem("Problem with Entity set 'DataContext.Employees'");
+            logger.LogError(ex.StackTrace);
+            return Problem(ex.ToString());
         }
 
         return CreatedAtAction("GetEmployee", new { id = employee.EmployeeId }, employee);

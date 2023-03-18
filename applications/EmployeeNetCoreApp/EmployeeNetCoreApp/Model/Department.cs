@@ -9,7 +9,10 @@ namespace EmployeeNetCoreApp.Model
 	{
         [Key]
         public int DepartmentId { get; set; }
+        [Required]
         public string? DepartmentName { get; set; }
+        [ForeignKey("Department")]
+        public ICollection<Employee>? Employees { get; set; }
     }
 }
 

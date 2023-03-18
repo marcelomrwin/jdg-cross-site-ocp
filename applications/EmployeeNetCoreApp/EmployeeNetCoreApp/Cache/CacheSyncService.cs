@@ -17,7 +17,7 @@ namespace EmployeeNetCoreApp.Cache
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
             while(await timer.WaitForNextTickAsync(stoppingToken))
             {
                 using(var scope = services.CreateScope())

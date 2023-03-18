@@ -4,6 +4,7 @@ using EmployeeNetCoreApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeNetCoreApp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230317145826_Update4")]
+    partial class Update4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -72,14 +75,14 @@ namespace EmployeeNetCoreApp.Migrations
                     b.Property<DateTime?>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2023, 3, 17, 15, 20, 20, 844, DateTimeKind.Utc).AddTicks(1820));
+                        .HasDefaultValue(new DateTime(2023, 3, 17, 14, 58, 26, 64, DateTimeKind.Utc).AddTicks(7700));
 
                     b.Property<string>("CreatedBy")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("1");
 
-                    b.Property<int>("Department")
+                    b.Property<int>("DepartmentId")
                         .HasColumnType("int");
 
                     b.Property<string>("Designation")
@@ -105,18 +108,20 @@ namespace EmployeeNetCoreApp.Migrations
 
                     b.HasKey("EmployeeId");
 
-                    b.HasIndex("Department");
+                    b.HasIndex("DepartmentId");
 
                     b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("EmployeeNetCoreApp.Model.Employee", b =>
                 {
-                    b.HasOne("EmployeeNetCoreApp.Model.Department", null)
+                    b.HasOne("EmployeeNetCoreApp.Model.Department", "Department")
                         .WithMany("Employees")
-                        .HasForeignKey("Department")
+                        .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("EmployeeNetCoreApp.Model.Department", b =>

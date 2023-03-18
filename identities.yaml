@@ -1,0 +1,17 @@
+credentials:
+- username: admin
+  password: password
+  roles:
+  - admin
+- username: developer
+  password: password
+  roles:
+  - admin
+- username: operator
+  password: password
+  roles:
+  - deployer
+- username: user1
+  password: password
+  roles:
+  - monitor

@@ -27,11 +27,13 @@
     <None Remove="Data\" />
     <None Remove="Services\" />
     <None Remove="Cache\" />
+    <None Remove="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Model\" />
     <Folder Include="Data\" />
     <Folder Include="Services\" />
     <Folder Include="Cache\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
 </Project>
