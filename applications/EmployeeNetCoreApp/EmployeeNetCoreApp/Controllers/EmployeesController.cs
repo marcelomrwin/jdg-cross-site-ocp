@@ -103,7 +103,7 @@ public class EmployeesController : ControllerBase
         return Ok("Deleted the Employee successfully !");
     }
 
-     [HttpGet("/list/keys")]
+     [HttpOptions]
     public async Task<ISet<string>> GetAllEmployeesKeysInCache()
     {
         return await employeeService.GetAllEmployeesKeysInCache();
