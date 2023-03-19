@@ -1,4 +1,5 @@
-﻿using EmployeeNetCoreApp.Data;
+﻿using System.Text.Json;
+using EmployeeNetCoreApp.Data;
 using EmployeeNetCoreApp.Exceptions;
 using EmployeeNetCoreApp.Model;
 using EmployeeNetCoreApp.Services;
@@ -18,6 +19,7 @@ public class EmployeesController : ControllerBase
     {        
         logger = pLogger;
         employeeService = pEmployeeService;
+        logger.LogWarning(this+" created and configured");
     }
 
     // GET: api/Employees
@@ -78,7 +80,8 @@ public class EmployeesController : ControllerBase
         catch (Exception ex)
         {
             logger.LogError(ex.StackTrace);
-            return Problem(ex.ToString());
+            string message = string.Format("Fail during saving entity {0} with exception {1}", JsonSerializer.Serialize(employee), ex.ToString());
+            return Problem(message);
         }
 
         return CreatedAtAction("GetEmployee", new { id = employee.EmployeeId }, employee);
@@ -98,6 +101,12 @@ public class EmployeesController : ControllerBase
         }
 
         return Ok("Deleted the Employee successfully !");
+    }
+
+     [HttpGet("/list/keys")]
+    public async Task<ISet<string>> GetAllEmployeesKeysInCache()
+    {
+        return await employeeService.GetAllEmployeesKeysInCache();
     }
 
 }

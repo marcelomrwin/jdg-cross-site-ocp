@@ -12,6 +12,8 @@ namespace EmployeeNetCoreApp.Services
 		public Task DeleteEmployee(int id);
 
 		public Task SyncCacheWithDatabase(CancellationToken cancellationToken);
+
+		public Task<ISet<string>> GetAllEmployeesKeysInCache();
 	}
 }
 

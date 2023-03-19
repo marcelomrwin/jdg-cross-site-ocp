@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Infinispan.Hotrod.Caching" Version="0.0.1-alpha3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
+    <PackageReference Include="RestSharp" Version="109.0.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.96" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.4" />

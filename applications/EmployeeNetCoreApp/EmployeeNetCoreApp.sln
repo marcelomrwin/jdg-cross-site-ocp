@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{7AE5398C-4F36-4E1E-AC58-67BCF9A38DE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmployeeNetCoreApp.Tests", "EmployeeNetCoreApp.Tests\EmployeeNetCoreApp.Tests.csproj", "{251EA0F0-CCAD-44B3-915E-374699D5DD22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +26,10 @@ Global
 		{7AE5398C-4F36-4E1E-AC58-67BCF9A38DE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AE5398C-4F36-4E1E-AC58-67BCF9A38DE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AE5398C-4F36-4E1E-AC58-67BCF9A38DE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{251EA0F0-CCAD-44B3-915E-374699D5DD22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{251EA0F0-CCAD-44B3-915E-374699D5DD22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{251EA0F0-CCAD-44B3-915E-374699D5DD22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{251EA0F0-CCAD-44B3-915E-374699D5DD22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,14 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using EmployeeNetCoreApp.Cache;
-using Infinispan.Hotrod.Core;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-
-using Microsoft.Extensions.Caching.Distributed;
-using System.Linq;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using EmployeeNetCoreApp.Exceptions;
 
 namespace EmployeeNetCoreApp.Services
@@ -19,21 +12,16 @@ namespace EmployeeNetCoreApp.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly DataContext context;
-        private readonly CacheConfiguration cacheConfig;
+        
         private readonly ILogger<EmployeeService> logger;
-        private readonly IDistributedCache distributedCache;
-        private readonly InfinispanDG infinispanDG;
+        private readonly DataGridRestClient dataGridRestClient;
+                
 
-        private Cache<string, string> cache { get; }
-
-        public EmployeeService(DataContext pContext, IDistributedCache distCache, CacheConfiguration pCacheConfig, InfinispanDG dG, ILogger<EmployeeService> pLogger)
+        public EmployeeService(DataContext pContext, DataGridRestClient gridRestClient, ILogger<EmployeeService> pLogger)
         {
             context = pContext;
-            cacheConfig = pCacheConfig;
-            logger = pLogger;
-            distributedCache = distCache;
-            infinispanDG = dG;
-            cache = infinispanDG.NewCache(new StringMarshaller(), new StringMarshaller(), cacheConfig.Cache);
+            this.dataGridRestClient = gridRestClient;
+            logger = pLogger;            
         }
 
         public async Task<Employee?> GetEmployee(int id)
@@ -80,15 +68,12 @@ namespace EmployeeNetCoreApp.Services
                 employee.UUID = Guid.NewGuid().ToString();
 
             context.Employees.Add(employee);
-            await context.SaveChangesAsync();
-
-            logger.LogInformation("Entity Saved! Updating Cache");
-
             string json = JsonSerializer.Serialize(employee);
-            distributedCache.SetString(employee.UUID, json);
-
-            logger.LogInformation("Cache Updated!");
-
+            
+            await context.SaveChangesAsync();
+            
+            dataGridRestClient.AddtoCache(employee.UUID, json);
+            
             return employee;
 
         }
@@ -98,19 +83,16 @@ namespace EmployeeNetCoreApp.Services
             if (!EmployeeExists(employee.EmployeeId))
                 throw new DbUpdateException("Entity " + employee.EmployeeId + " not found!");
 
-            //implements the logic to check the version before update (compare version number)
-
             var dbEmployee = context.Employees.AsNoTracking().Where(e => e.EmployeeId == employee.EmployeeId).Select(e => e).Single();
 
             if (IsNotNull(dbEmployee))
             {
-
-                if (await UserExistsInCacheAsync(dbEmployee.UUID))
-                {
-                    Employee cacheEmployee = GetEmployeeFromCache(dbEmployee.UUID);
+                Employee? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(dbEmployee.UUID);
+                if (IsNotNull(cacheEmployee))
+                {                    
                     if (dbEmployee.Version < cacheEmployee.Version)
                     {
-                        throw new EntityOutdatedException(dbEmployee.UUID,cacheEmployee.UpdatedBy,cacheEmployee.UpdatedDate,dbEmployee.Version,cacheEmployee.Version);
+                        throw new EntityOutdatedException(dbEmployee.UUID, cacheEmployee.UpdatedBy, cacheEmployee.UpdatedDate, dbEmployee.Version, cacheEmployee.Version);
                     }
                 }
 
@@ -126,9 +108,8 @@ namespace EmployeeNetCoreApp.Services
 
                 await context.SaveChangesAsync();
 
-                string json = JsonSerializer.Serialize(employee);
-                distributedCache.SetString(employee.UUID, json);
-                distributedCache.Refresh(employee.UUID);
+                string json = JsonSerializer.Serialize(employee);                
+                dataGridRestClient.AddtoCache(employee.UUID, json);
             }
 
             return employee;
@@ -143,16 +124,16 @@ namespace EmployeeNetCoreApp.Services
 
             if (IsNotNull(dbEmployee))
             {
-                
+
                 context.Entry(employee).State = EntityState.Modified;
 
                 employee.UpdatedBy = "DotNetUser";
                 employee.UpdatedDate = DateTime.UtcNow;
                 employee.UUID = dbEmployee.UUID;
                 employee.CreateDate = dbEmployee.CreateDate;
-                employee.CreatedBy = dbEmployee.CreatedBy;                
+                employee.CreatedBy = dbEmployee.CreatedBy;
                 await context.SaveChangesAsync();
-                
+
             }
 
             return employee;
@@ -192,21 +173,15 @@ namespace EmployeeNetCoreApp.Services
             var dbEmployee = context.Employees.AsNoTracking().Where(e => e.UUID == uuid).Select(e => e).Single();
             return dbEmployee;
         }
-
-        private async Task<bool> UserExistsInCacheAsync(string uuid)
-        {
-            return await cache.ContainsKey(uuid);
-        }
+        
 
         public async Task SyncCacheWithDatabase(CancellationToken cancellationToken)
-        {
-
-            //Cache<string, string> cache = infinispanDG.NewCache(new StringMarshaller(), new StringMarshaller(), cacheConfig.Cache);
-            ISet<string> keys = await cache.KeySet();
+        {            
+            ISet<string> keys = await dataGridRestClient.GetAllKeysFromCache();
             foreach (string key in keys)
             {
 
-                Employee employee = GetEmployeeFromCache(key);
+                Employee? employee = await dataGridRestClient.GetEmployeeFromCache(key);
 
                 if (EmployeeExists(key))
                 {
@@ -228,9 +203,9 @@ namespace EmployeeNetCoreApp.Services
 
         }
 
-        private Employee GetEmployeeFromCache(string key)
+        public Task<ISet<string>> GetAllEmployeesKeysInCache()
         {
-            return JsonSerializer.Deserialize<Employee>(distributedCache.GetString(key));            
+            return dataGridRestClient.GetAllKeysFromCache();
         }
     }
 }

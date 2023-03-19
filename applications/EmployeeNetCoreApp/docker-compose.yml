@@ -1,8 +1,0 @@
-version: '3.4'
-
-services:
-  employeenetcoreapp:
-    image: ${DOCKER_REGISTRY-}employeenetcoreapp
-    build:
-      context: .
-      dockerfile: EmployeeNetCoreApp/Dockerfile

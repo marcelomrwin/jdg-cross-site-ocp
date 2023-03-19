@@ -14,6 +14,15 @@ infinispan-cli connect -u user -p pass --trustall http://localhost:11222
 **Project:** jdg-cross-site
 
 ```
-oc delete secret -n jdg-cross-site dg-identities-secret --ignore-not-found
-oc create secret -n jdg-cross-site generic --from-file=identities.yaml dg-identities-secret
+oc delete secret -n datagrid dg-identities-secret --ignore-not-found
+oc create secret -n datagrid generic --from-file=identities.yaml dg-identities-secret
 ```
+
+## Port-Forward datagrid
+```
+oc port-forward $(oc get pods -l app=infinispan-pod -o=custom-columns=NAME:.metadata.name --no-headers) 11222:11222
+```
+
+https://infinispan.org/docs/infinispan-operator/main/operator.html#operator
+https://infinispan.org/docs/stable/titles/rest/rest.html#rest_server
+http://www.mastertheboss.com/jboss-frameworks/infinispan/infinispan-restful-interface/

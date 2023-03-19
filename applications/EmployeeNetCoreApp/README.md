@@ -25,13 +25,15 @@ GO
 ### DotNet App https://stackup.hashnode.dev/ef-migrations-visual-studio-mac
 
 ```
+
 dotnet new tool-manifest
 dotnet tool install --local dotnet-ef
 dotnet ef migrations add DbInitializationWithSeed (this value must change after each update)
 dotnet ef database update
 dotnet ef migrations remove
 
-dotnet add package Infinispan.Hotrod.Caching --prerelease
+dotnet add package Infinispan.Hotrod.Caching --prerelease (troquei pelo rest client, estava dando bugs demais)
+dotnet add package RestSharp
 ```
 
 https://developers.redhat.com/articles/2022/07/07/add-infinispan-cache-your-aspnet-application#add_business_code

@@ -1,10 +1,7 @@
 ﻿using EmployeeNetCoreApp.Cache;
 using EmployeeNetCoreApp.Data;
 using EmployeeNetCoreApp.Services;
-using Infinispan.Hotrod.Caching.Distributed;
-using Infinispan.Hotrod.Core;
 using Microsoft.EntityFrameworkCore;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,26 +22,8 @@ var cacheConfiguration = builder.Configuration.GetSection("CacheConfiguration").
 builder.Services.AddSingleton(cacheConfiguration);
 
 //Infinispan
-
-InfinispanDG infinispan = new InfinispanDG();
-infinispan.AddHost(cacheConfiguration.Host, cacheConfiguration.Port);
-infinispan.Password = cacheConfiguration.Password;
-infinispan.User = cacheConfiguration.User;
-infinispan.AuthMech = "PLAIN";
-infinispan.ClientIntelligence = 0x03;
-infinispan.UseTLS = true;
-
-builder.Services.AddSingleton(infinispan);
-
-builder.Services.AddInfinispanCache(options =>
-{
-    options.CacheName = cacheConfiguration.Cache;    
-    options.Cluster = infinispan;    
-
-    options.Cluster.AddHost(cacheConfiguration.Host, cacheConfiguration.Port);
-    options.Cluster.Password = cacheConfiguration.Password;
-    options.Cluster.User = cacheConfiguration.User;
-});
+DataGridRestClient dataGridRestClient = new DataGridRestClient(cacheConfiguration);
+builder.Services.AddSingleton<DataGridRestClient>(dataGridRestClient);
 
 builder.Services.AddSingleton<CacheSyncService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<CacheSyncService>());
@@ -56,6 +35,7 @@ builder.Services.AddLogging(option =>
         c.TimestampFormat = "[yyyy/MM/dd HH:mm:ss]";                
     });
 });
+
 
 var app = builder.Build();
 
