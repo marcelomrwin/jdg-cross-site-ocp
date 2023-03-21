@@ -51,7 +51,7 @@ namespace EmployeeNetCoreApp.Cache
                 var response = await restClient.PutAsync(request);
                 if (response.StatusCode != HttpStatusCode.NoContent)
                 {
-                    throw new Exception("An error occurred when trying to insert the entity into the cache. \n" + response.StatusCode + "\n" + response.Content);
+                    throw new Exception("An error occurred when trying to update the entity into the cache. \n" + response.StatusCode + "\n" + response.Content);
                 }
             }
         }
@@ -80,6 +80,18 @@ namespace EmployeeNetCoreApp.Cache
                 return JsonSerializer.Deserialize<Employee>(response.Content, options);
             }
             return null;
+        }
+
+        public async Task DeleteEmployeeFromCache(string uuid)
+        {
+            //DELETE /rest/v2/caches/{cacheName}/{cacheKey}
+            var request = new RestRequest("/caches"+cacheConfig.Cache+"/"+uuid);
+            var response = await restClient.DeleteAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.NoContent)
+            {
+                throw new Exception("An error occurred when trying to delete the entity into the cache. \n" + response.StatusCode + "\n" + response.Content);
+            }
         }
 
         public async Task<ISet<string>> GetAllKeysFromCache()

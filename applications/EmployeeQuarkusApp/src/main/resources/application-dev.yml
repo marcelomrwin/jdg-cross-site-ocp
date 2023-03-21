@@ -1,0 +1,15 @@
+quarkus:
+  log:
+    level: INFO
+    category:
+      "com.redhat.developers":
+        level: DEBUG
+  hibernate-orm:
+    log:
+      sql: true
+  datasource:
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/employee_db
+  flyway:
+    migrate-at-start: true
+    locations: db/migration

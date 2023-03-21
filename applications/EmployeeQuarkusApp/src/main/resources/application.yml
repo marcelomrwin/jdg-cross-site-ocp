@@ -1,0 +1,38 @@
+quarkus:
+  banner:
+    enabled: false
+  devservices:
+    enabled: false
+  hibernate-orm:
+    database:
+      generation: none
+  datasource:
+    db-kind: postgresql
+    username: ${DATABASE_USER:admin}
+    password: ${DATABASE_PASS:password}
+    jdbc:
+      url: jdbc:postgresql://${DATABASE_URL:postgresql}:5432/employee_db
+  jackson:
+    fail-on-unknown-properties: false
+mp:
+  openapi:
+    extensions:
+      smallrye:
+        info:
+          title: Employee API
+          version: 0.0.1
+          description: API for retrieving employees
+          contact:
+            email: masales@redhat.com
+            name: Employee API Support
+            url: https://github.com/quarkus-ground-up/employee-api
+          license:
+            name: Apache 2.0
+            url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+microprofile:
+  rest:
+    client:
+      disable:
+        default:
+          mapper: true

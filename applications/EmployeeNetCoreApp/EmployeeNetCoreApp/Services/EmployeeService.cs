@@ -81,7 +81,7 @@ namespace EmployeeNetCoreApp.Services
         public async Task<Employee> UpdateEmployee(Employee employee, bool updateVersion = true)
         {
             if (!EmployeeExists(employee.EmployeeId))
-                throw new DbUpdateException("Entity " + employee.EmployeeId + " not found!");
+                throw new DbUpdateException("Entity " + employee.EmployeeId + " not found in the local database");
 
             var dbEmployee = context.Employees.AsNoTracking().Where(e => e.EmployeeId == employee.EmployeeId).Select(e => e).Single();
 
@@ -149,6 +149,8 @@ namespace EmployeeNetCoreApp.Services
                 context.Employees.Remove(employee);
 
             await context.SaveChangesAsync();
+
+            dataGridRestClient.DeleteEmployeeFromCache(employee.UUID);
         }
 
         private bool EmployeeExists(int id)

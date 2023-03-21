@@ -66,7 +66,7 @@ public class EmployeesController : ControllerBase
             return NotFound(dbue.Message);
         }
 
-        return Ok("Updated the Employee successfully !");
+        return Ok(employee);
     }
 
     // POST: api/Employees
