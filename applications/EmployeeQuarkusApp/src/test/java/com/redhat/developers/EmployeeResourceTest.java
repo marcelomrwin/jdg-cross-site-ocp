@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import com.redhat.developers.cache.DataGridRestClient;
 import com.redhat.developers.model.Employee;
+import com.redhat.developers.model.EmployeeDTO;
 import com.redhat.developers.rest.EmployeeResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -107,9 +108,8 @@ public class EmployeeResourceTest {
         assertThat(savedEmployee.getEmployeeId()).isNotNull();
         assertThat(savedEmployee.getUuid()).isNotNull();
 
-        Employee cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, savedEmployee.getUuid());
+        EmployeeDTO cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, savedEmployee.getUuid());
         assertThat(cacheEmployee).isNotNull();
-        assertThat(cacheEmployee.getEmployeeId()).isEqualTo(savedEmployee.getEmployeeId());
         assertThat(cacheEmployee.getVersion()).isNotNull();
         assertThat(cacheEmployee.getVersion()).isGreaterThan(0);
 
@@ -146,7 +146,7 @@ public class EmployeeResourceTest {
     private Employee getEmployee() {
         Employee employee = Employee.builder()
                 .fullName("Employee Test")
-                .department(1L)
+                .department("IT")
                 .designation("Designation Test")
                 .createBy("JUnit Test")
                 .createDate(LocalDateTime.now(ZoneId.of("UTC")))

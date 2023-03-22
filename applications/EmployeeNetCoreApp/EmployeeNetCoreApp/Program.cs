@@ -25,9 +25,6 @@ builder.Services.AddSingleton(cacheConfiguration);
 DataGridRestClient dataGridRestClient = new DataGridRestClient(cacheConfiguration);
 builder.Services.AddSingleton<DataGridRestClient>(dataGridRestClient);
 
-builder.Services.AddSingleton<CacheSyncService>();
-builder.Services.AddHostedService(provider => provider.GetRequiredService<CacheSyncService>());
-
 builder.Services.AddLogging(option =>
 {
     option.AddConsole(c =>

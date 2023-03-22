@@ -2,9 +2,10 @@ package com.redhat.developers.rest;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -22,6 +23,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.developers.exception.EntityOutdatedException;
+import com.redhat.developers.exception.ServiceException;
 import com.redhat.developers.model.Employee;
 import com.redhat.developers.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
@@ -50,10 +52,10 @@ public class EmployeeResource {
     @GET
     @Path("/{employeeId}")
     public Response getEmployeeById(@NotNull Long employeeId) {
-        Employee employee = employeeService.getEmployeeById(employeeId);
-        if (Objects.isNull(employee))
+        Optional<Employee> employee = employeeService.getEmployeeById(employeeId);
+        if (!employee.isPresent())
             return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.ok(employee).build();
+        return Response.ok(employee.get()).build();
     }
 
     @APIResponse(
@@ -125,37 +127,51 @@ public class EmployeeResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateEmployee(@Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId, @NotNull @Valid Employee employee) {
         try {
-            employeeService.updateEmployee(employee);
+            Employee updatedEmployee = employeeService.updateEmployee(employee);
+            return Response
+                    .ok(updatedEmployee)
+                    .build();
         } catch (EntityOutdatedException eoe) {
             return Response.status(Response.Status.BAD_REQUEST).entity(eoe.getMessage())
                     .type(MediaType.TEXT_PLAIN_TYPE)
                     .build();
         } catch (Exception e) {
             log.error("Fail updating employee", e);
-            return Response.serverError().entity(e).build();
+            return Response.serverError().entity(e.getMessage()).build();
         }
-        return Response
-                .ok(employee)
-                .build();
     }
 
     @DELETE
     @Path("/{employeeId}")
-    public Response removeEmployee(@Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId){
+    public Response removeEmployee(@Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId) {
         try {
             employeeService.deleteEmployee(employeeId);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Fail updating employee", e);
             return Response.serverError().entity(e).build();
         }
         return Response.noContent().build();
     }
 
-    @GET
-    @Path("/cache/events")
-    public Response listCacheEvents(){
+    @PUT
+    @Path("/fromcache/{employeeId}")
+    public Response updateEmployeeFromCache(@PathParam("employeeId") Long employeeId) {
+        try {
+            employeeService.updateEmployeeFromCache(employeeId);
+        } catch (ServiceException | EntityNotFoundException se) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
+        }
+        return Response.ok("Employee Updated successfully!").build();
+    }
 
-        employeeService.listCacheEvents();
-        return Response.ok().build();
+    @POST
+    @Path("/fromcache/{uuid}")
+    public Response importEmployeeFromCache(@PathParam("uuid") String uuid) {
+        try {
+            employeeService.importEmployeeFromCache(uuid);
+        } catch (ServiceException se) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
+        }
+        return Response.status(Response.Status.CREATED).entity("Employee Updated successfully!").build();
     }
 }

@@ -32,15 +32,19 @@ public class JDGTest
         {
             Employee employee = new Employee();
             employee.FullName = "Employee Test";
-            employee.Department = 1;
+            employee.Department = "IT";
             employee.Designation = "Designation Test";
             employee.CreatedBy = "Xunit Test";
             employee.CreateDate = DateTime.UtcNow;
             employee.UUID = UUID;
 
-            string json = JsonSerializer.Serialize(employee);
+            EmployeeDTO employeeDTO = EmployeeDTO.FromEntity(employee);
+            employeeDTO.State = EmployeeDTO.CREATED;
+            string employeeJson = employeeDTO.ToJson();
 
-            dataGridRestClient.AddtoCache(UUID, json);
+            output.WriteLine(employeeJson);
+
+            dataGridRestClient.AddtoCache(UUID, employeeJson);
 
             var cacheEmployee = dataGridRestClient.GetEmployeeFromCache(UUID);
 
@@ -58,8 +62,9 @@ public class JDGTest
     [Fact]
     public async void testSync()
     {
-        ISet<string> keys = await  dataGridRestClient.GetAllKeysFromCache();
-        foreach (string key in keys){
+        ISet<string> keys = await dataGridRestClient.GetAllKeysFromCache();
+        foreach (string key in keys)
+        {
             output.WriteLine(key);
         }
     }

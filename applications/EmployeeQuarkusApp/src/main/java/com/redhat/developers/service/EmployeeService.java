@@ -4,20 +4,22 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.developers.cache.DataGridRestClient;
 import com.redhat.developers.exception.EntityOutdatedException;
 import com.redhat.developers.exception.ServiceException;
 import com.redhat.developers.model.Employee;
+import com.redhat.developers.model.EmployeeDTO;
+import com.redhat.developers.repository.EmployeeRepository;
+import com.redhat.developers.util.EmployeeMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -30,23 +32,25 @@ public class EmployeeService {
     String cacheName;
 
     @Inject
-    EntityManager entityManager;
+    EmployeeMapper employeeMapper;
+
+    @Inject
+    EmployeeRepository employeeRepository;
 
     @Inject
     @RestClient
     DataGridRestClient dataGridRestClient;
 
     public List<Employee> listEmployees() {
-        return entityManager.createNamedQuery("Employee.findAll", Employee.class)
-                .getResultList();
+        return employeeRepository.findAll().list();
     }
 
-    public Employee getEmployeeById(Long employeeId) {
-        return entityManager.find(Employee.class, employeeId);
+    public Optional<Employee> getEmployeeById(Long employeeId) {
+        return employeeRepository.findByIdOptional(employeeId);
     }
 
-    public Employee getEmployeeByUUID(String uuid) {
-        return entityManager.createNamedQuery("Employee.findByUUID", Employee.class).getSingleResult();
+    public Optional<Employee> getEmployeeByUUID(String uuid) {
+        return employeeRepository.findByUUID(uuid);
     }
 
     @Transactional
@@ -58,39 +62,45 @@ public class EmployeeService {
             employee.setUuid(UUID.randomUUID().toString());
         }
         employee.setVersion(1);
-        entityManager.persist(employee);
+        employeeRepository.persist(employee);
+
         //add to cache
-        insertOrUpdateCache(employee);
+        EmployeeDTO employeeDTO = employeeMapper.toDTO(employee);
+        employeeDTO.setState(EmployeeDTO.STATE.CREATED);
+        insertOrUpdateCache(employeeDTO);
 
         return employee;
     }
 
     @Transactional
     public Employee updateEmployee(Employee employee) {
-        Employee dbEmployee = getEmployeeById(employee.getEmployeeId());
-        if (Objects.isNull(dbEmployee))
+        Optional<Employee> dbEmployeeOptional = getEmployeeById(employee.getEmployeeId());
+        if (!dbEmployeeOptional.isPresent())
             throw new EntityNotFoundException("Entity " + employee.getEmployeeId() + " not found in the local database");
 
-        Employee cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, dbEmployee.getUuid());
+        Employee dbEmployee = dbEmployeeOptional.get();
+        EmployeeDTO cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, dbEmployee.getUuid());
+
         if (Objects.nonNull(cacheEmployee)) {
             if (dbEmployee.getVersion() < cacheEmployee.getVersion()) {
                 throw new EntityOutdatedException(dbEmployee.getUuid(), cacheEmployee.getUpdatedBy(), cacheEmployee.getUpdatedDate(), dbEmployee.getVersion(), cacheEmployee.getVersion());
             }
         }
 
-        employee.setUpdatedBy("QuarkusUser");
-        employee.setUpdatedDate(LocalDateTime.now(ZoneId.of("UTC")));
-        employee.setUuid(dbEmployee.getUuid());
-        employee.setCreateDate(dbEmployee.getCreateDate());
-        employee.setCreateBy(dbEmployee.getCreateBy());
-        employee.setVersion(dbEmployee.getVersion() + 1);
+        dbEmployee.setFullName(employee.getFullName());
+        dbEmployee.setDepartment(employee.getDepartment());
+        dbEmployee.setDesignation(employee.getDesignation());
+        dbEmployee.setVersion(dbEmployee.getVersion() + 1);
+        dbEmployee.setUpdatedBy("QuarkusUser");
+        dbEmployee.setUpdatedDate(LocalDateTime.now(ZoneId.of("UTC")));
 
-        entityManager.merge(employee);
-        entityManager.flush();
+        employeeRepository.persistAndFlush(dbEmployee);
 
-        insertOrUpdateCache(employee);
+        EmployeeDTO employeeDTO = employeeMapper.toDTO(dbEmployee);
+        employeeDTO.setState(EmployeeDTO.STATE.UPDATED);
+        insertOrUpdateCache(employeeDTO);
 
-        return employee;
+        return dbEmployee;
     }
 
     public void listCacheEvents() {
@@ -100,21 +110,64 @@ public class EmployeeService {
 
     @Transactional
     public void deleteEmployee(Long employeeId) {
-        Employee dbEmployee = entityManager.find(Employee.class, employeeId);
-        if (Objects.isNull(dbEmployee))
+        Optional<Employee> dbEmployee = employeeRepository.findByIdOptional(employeeId);
+        if (!dbEmployee.isPresent())
             throw new EntityNotFoundException("Entity " + employeeId + " not found in the local database");
+        employeeRepository.deleteById(employeeId);
 
-        entityManager.remove(dbEmployee);
+        EmployeeDTO employeeDTO = employeeMapper.toDTO(dbEmployee.get());
+        dataGridRestClient.deleteEmployeeFromCache(cacheName, employeeDTO.getUuid());
     }
 
-    private void insertOrUpdateCache(Employee employee) {
-        if (!keyExists(employee.getUuid())) {
-            Response response = dataGridRestClient.insertEmployeeInCache(cacheName, employee.getUuid(), employee);
+    @Transactional
+    public void updateEmployeeFromCache(Long employeeId) {
+        Optional<Employee> dbEmployeeOptional = employeeRepository.findByIdOptional(employeeId);
+        if (!dbEmployeeOptional.isPresent())
+            throw new ServiceException("Entity %d not found in the local database!", employeeId);
+
+        Employee dbEmployee = dbEmployeeOptional.get();
+        EmployeeDTO cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, dbEmployee.getUuid());
+
+        if (Objects.nonNull(cacheEmployee)) {
+            Employee employee = employeeMapper.toEntity(cacheEmployee);
+            employee.setEmployeeId(employeeId);
+            employeeRepository.getEntityManager().merge(employee);
+            employeeRepository.getEntityManager().flush();
+        } else {
+            throw new ServiceException("Employee %d not found in the cache!", employeeId);
+        }
+    }
+
+    @Transactional
+    public void importEmployeeFromCache(String uuid) {
+        EmployeeDTO cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, uuid);
+
+        if (Objects.nonNull(cacheEmployee)) {
+            Employee employee = employeeMapper.toEntity(cacheEmployee);
+            Optional<Employee> dbEmployeeOptional = employeeRepository.findByUUID(uuid);
+            if (dbEmployeeOptional.isPresent()) {
+                //update
+                Employee dbEmployee = dbEmployeeOptional.get();
+                employee.setEmployeeId(dbEmployee.getEmployeeId());
+                employeeRepository.getEntityManager().merge(employee);
+                employeeRepository.getEntityManager().flush();
+            } else {
+                //insert
+                employeeRepository.persist(employee);
+            }
+        } else {
+            throw new ServiceException("Employee %s not found in the cache!", uuid);
+        }
+    }
+
+    private void insertOrUpdateCache(EmployeeDTO employeeDTO) {
+        if (!keyExists(employeeDTO.getUuid())) {
+            Response response = dataGridRestClient.insertEmployeeInCache(cacheName, employeeDTO.getUuid(), employeeDTO);
             if (!checkResponseStatus(response, Response.Status.NO_CONTENT.getStatusCode())) {
                 throw new ServiceException("An error occurred when trying to insert the entity into the cache.\n{}\n{}", response.getStatus(), response.getEntity());
             }
         } else {
-            Response response = dataGridRestClient.updateEmployeeInCache(cacheName, employee.getUuid(), employee);
+            Response response = dataGridRestClient.updateEmployeeInCache(cacheName, employeeDTO.getUuid(), employeeDTO);
             if (!checkResponseStatus(response, Response.Status.NO_CONTENT.getStatusCode())) {
                 throw new ServiceException("An error occurred when trying to update the entity into the cache.\n{}\n{}", response.getStatus(), response.getEntity());
             }
@@ -131,3 +184,47 @@ public class EmployeeService {
     }
 
 }
+
+/*
+
+public async Task UpdateEntityFromCache(long employeeId)
+        {
+            if (!EmployeeExists(employeeId))
+                throw new Exception("Employee " + employeeId + " not found in the database!");
+
+            var dbEmployee = context.Employees.AsNoTracking().Where(e => e.EmployeeId == employeeId).Select(e => e).Single();
+            EmployeeDTO? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(dbEmployee.UUID);
+            if (IsNotNull(cacheEmployee))
+            {
+                Employee employee = cacheEmployee.ToEntity();
+                employee.EmployeeId = dbEmployee.EmployeeId;
+                context.Entry(employee).State = EntityState.Modified;
+
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Employee " + employeeId + " not found in the cache!");
+            }
+
+        }
+
+        [HttpPut("fromcache/{employeeId}")]
+    public async Task<IActionResult> UpdateEmployeeFromCache(long employeeId)
+    {
+        logger.LogInformation("CALL METHOD!");
+
+        try
+        {
+            await employeeService.UpdateEntityFromCache(employeeId);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+
+        return Ok("Employee Updated successfully!");
+
+    }
+
+ */

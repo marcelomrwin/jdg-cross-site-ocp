@@ -26,6 +26,6 @@ public class EntityOutdatedException extends RuntimeException{
 
     @Override
     public String getMessage(){
-        return String.format("The local version of employee %s is out of date. The most up-to-date version is %x, updated by %s on %s and local version is %x. Please update your local version", uuid, lastVersion, Objects.requireNonNullElse(updatedBy,"TestUser"),Objects.requireNonNullElse(updatedDate,  LocalDateTime.now()) , localVersion);
+        return String.format("The local version of employee %s is out of date. The most up-to-date version is %d, updated by %s on %s and local version is %d. Please update your local version", uuid, lastVersion, Objects.requireNonNullElse(updatedBy,"TestUser"),Objects.requireNonNullElse(updatedDate,  LocalDateTime.now()) , localVersion);
     }
 }

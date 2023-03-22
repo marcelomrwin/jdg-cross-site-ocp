@@ -11,15 +11,15 @@ namespace EmployeeNetCoreApp.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
-{    
+{
     private readonly IEmployeeService employeeService;
     private readonly ILogger<EmployeesController> logger;
 
     public EmployeesController(IEmployeeService pEmployeeService, ILogger<EmployeesController> pLogger)
-    {        
+    {
         logger = pLogger;
         employeeService = pEmployeeService;
-        logger.LogWarning(this+" created and configured");
+        logger.LogWarning(this + " created and configured");
     }
 
     // GET: api/Employees
@@ -45,7 +45,7 @@ public class EmployeesController : ControllerBase
 
     // PUT: api/Employees/1
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutEmployee(int id, Employee employee)
+    public async Task<IActionResult> PutEmployee(long id, Employee employee)
     {
         if (id != employee.EmployeeId)
         {
@@ -89,7 +89,7 @@ public class EmployeesController : ControllerBase
 
     // DELETE: api/Employees/1
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteEmployee(int id)
+    public async Task<IActionResult> DeleteEmployee(long id)
     {
         try
         {
@@ -103,10 +103,43 @@ public class EmployeesController : ControllerBase
         return Ok("Deleted the Employee successfully !");
     }
 
-     [HttpOptions]
+    [HttpOptions]
     public async Task<ISet<string>> GetAllEmployeesKeysInCache()
     {
         return await employeeService.GetAllEmployeesKeysInCache();
+    }
+
+    // PUT: api/employees/fromcache/1
+    [HttpPut("fromcache/{employeeId}")]
+    public async Task<IActionResult> UpdateEmployeeFromCache(long employeeId)
+    {        
+        try
+        {
+            await employeeService.UpdateEntityFromCache(employeeId);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+
+        return Ok("Employee Updated successfully!");
+
+    }
+
+    // POST: api/employees/fromcache/abc-123
+    [HttpPost("fromcache/{employeeId}")]
+    public async Task<IActionResult> ImportEmployeeFromCache(string uuid)
+    {
+        try
+        {
+            await employeeService.ImportEntityFromCache(uuid);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+
+        return StatusCode(201, "Employee Updated successfully!");
     }
 
 }

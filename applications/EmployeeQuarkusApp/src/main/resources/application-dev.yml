@@ -12,4 +12,17 @@ quarkus:
       url: jdbc:postgresql://localhost:5432/employee_db
   flyway:
     migrate-at-start: true
+    clean-at-start: true
+    baseline-on-migrate: true
     locations: db/migration
+  infinispan:
+    cache: employees
+    user: admin
+    password: password
+  rest-client:
+    infinispan-rest:
+      url: https://localhost:11222
+      scope: javax.inject.Singleton
+      verify-host: false
+  tls:
+    trust-all: true

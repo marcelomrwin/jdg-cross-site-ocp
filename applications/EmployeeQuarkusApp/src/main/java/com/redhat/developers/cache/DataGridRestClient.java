@@ -15,7 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.redhat.developers.model.Employee;
+import com.redhat.developers.model.EmployeeDTO;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @Path("/rest/v2/caches")
@@ -29,7 +29,7 @@ public interface DataGridRestClient {
 
     @GET
     @Path("/{cacheName}/{cacheKey}")
-    Employee getEmployeeFromCache(@NotEmpty @PathParam("cacheName") String cacheName,@NotEmpty @PathParam("cacheKey") String cacheKey);
+    EmployeeDTO getEmployeeFromCache(@NotEmpty @PathParam("cacheName") String cacheName,@NotEmpty @PathParam("cacheKey") String cacheKey);
 
     @HEAD
     @Path("/{cacheName}/{cacheKey}")
@@ -37,11 +37,11 @@ public interface DataGridRestClient {
 
     @POST
     @Path("/{cacheName}/{cacheKey}")
-    Response insertEmployeeInCache(@NotEmpty @PathParam("cacheName") String cacheName,@NotEmpty @PathParam("cacheKey") String cacheKey, Employee employee);
+    Response insertEmployeeInCache(@NotEmpty @PathParam("cacheName") String cacheName,@NotEmpty @PathParam("cacheKey") String cacheKey, EmployeeDTO employeeDTO);
 
     @PUT
     @Path("/{cacheName}/{cacheKey}")
-    Response updateEmployeeInCache(@NotEmpty @PathParam("cacheName") String cacheName,@NotEmpty @PathParam("cacheKey") String cacheKey, Employee employee);
+    Response updateEmployeeInCache(@NotEmpty @PathParam("cacheName") String cacheName,@NotEmpty @PathParam("cacheKey") String cacheKey, EmployeeDTO employeeDTO);
 
     @GET
     @Path("/{cacheName}?action=listen")

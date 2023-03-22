@@ -11,18 +11,11 @@ namespace EmployeeNetCoreApp.Data
         {
         }
 
-        public DbSet<Employee> Employees { get; set; } = default!;
-
-        public DbSet<Department> Departments { get; set; } = default!;
+        public DbSet<Employee> Employees { get; set; } = default!;        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Department>().HasData(
-                new Department { DepartmentId = 1, DepartmentName = "IT" },
-                new Department { DepartmentId = 2, DepartmentName = "HR" },
-                new Department { DepartmentId = 3, DepartmentName = "Marketing" },
-                new Department { DepartmentId = 4, DepartmentName = "Sales" }
-            );
+        
             modelBuilder.Entity<Employee>()
                 .Property(b => b.CreateDate)
                 .HasDefaultValue(DateTime.UtcNow);

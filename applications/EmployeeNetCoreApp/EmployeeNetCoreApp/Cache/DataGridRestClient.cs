@@ -34,7 +34,7 @@ namespace EmployeeNetCoreApp.Cache
         }
 
         public async void AddtoCache(string uuid, string employeeJson)
-        {
+        {            
             var request = new RestRequest("/caches/" + cacheConfig.Cache + "/" + uuid).AddJsonBody(employeeJson);
             if (!await KeyExistsInCacheAsync(uuid))
             {
@@ -65,7 +65,7 @@ namespace EmployeeNetCoreApp.Cache
             return response.StatusCode == HttpStatusCode.OK;
         }
 
-        public async Task<Employee> GetEmployeeFromCache(string uuid)
+        public async Task<EmployeeDTO> GetEmployeeFromCache(string uuid)
         {
             //GET /rest/v2/caches/{cacheName}/{cacheKey}
             var request = new RestRequest("/caches/" + cacheConfig.Cache + "/" + uuid);
@@ -77,7 +77,7 @@ namespace EmployeeNetCoreApp.Cache
                 {
                     PropertyNameCaseInsensitive = true
                 };
-                return JsonSerializer.Deserialize<Employee>(response.Content, options);
+                return JsonSerializer.Deserialize<EmployeeDTO>(response.Content, options);
             }
             return null;
         }

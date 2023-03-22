@@ -6,14 +6,15 @@ namespace EmployeeNetCoreApp.Services
 	public interface IEmployeeService
 	{
 		public Task<IEnumerable<Employee>> GetEmployees();
-		public Task<Employee?> GetEmployee(int id);
+		public Task<Employee?> GetEmployee(long id);
 		public Task<Employee> SaveEmployee(Employee employee);
         public Task<Employee> UpdateEmployee(Employee employee,bool updateVersion = true);
-		public Task DeleteEmployee(int id);
-
-		public Task SyncCacheWithDatabase(CancellationToken cancellationToken);
-
+		public Task DeleteEmployee(long id);		
 		public Task<ISet<string>> GetAllEmployeesKeysInCache();
+
+		public Task UpdateEntityFromCache(long employeeId);
+
+		public Task ImportEntityFromCache(string uuid);
 	}
 }
 

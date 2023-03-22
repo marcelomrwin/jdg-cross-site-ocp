@@ -12,19 +12,19 @@ namespace EmployeeNetCoreApp.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly DataContext context;
-        
+
         private readonly ILogger<EmployeeService> logger;
         private readonly DataGridRestClient dataGridRestClient;
-                
+
 
         public EmployeeService(DataContext pContext, DataGridRestClient gridRestClient, ILogger<EmployeeService> pLogger)
         {
             context = pContext;
             this.dataGridRestClient = gridRestClient;
-            logger = pLogger;            
+            logger = pLogger;
         }
 
-        public async Task<Employee?> GetEmployee(int id)
+        public async Task<Employee?> GetEmployee(long id)
         {
 
             if (context.Employees == null)
@@ -68,12 +68,12 @@ namespace EmployeeNetCoreApp.Services
                 employee.UUID = Guid.NewGuid().ToString();
 
             context.Employees.Add(employee);
-            string json = JsonSerializer.Serialize(employee);
-            
             await context.SaveChangesAsync();
-            
-            dataGridRestClient.AddtoCache(employee.UUID, json);
-            
+
+            EmployeeDTO employeeDTO = EmployeeDTO.FromEntity(employee);
+            employeeDTO.State = EmployeeDTO.CREATED;
+            dataGridRestClient.AddtoCache(employee.UUID, employeeDTO.ToJson());
+
             return employee;
 
         }
@@ -87,9 +87,9 @@ namespace EmployeeNetCoreApp.Services
 
             if (IsNotNull(dbEmployee))
             {
-                Employee? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(dbEmployee.UUID);
+                EmployeeDTO? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(dbEmployee.UUID);
                 if (IsNotNull(cacheEmployee))
-                {                    
+                {
                     if (dbEmployee.Version < cacheEmployee.Version)
                     {
                         throw new EntityOutdatedException(dbEmployee.UUID, cacheEmployee.UpdatedBy, cacheEmployee.UpdatedDate, dbEmployee.Version, cacheEmployee.Version);
@@ -108,38 +108,15 @@ namespace EmployeeNetCoreApp.Services
 
                 await context.SaveChangesAsync();
 
-                string json = JsonSerializer.Serialize(employee);                
-                dataGridRestClient.AddtoCache(employee.UUID, json);
+                EmployeeDTO employeeDTO = EmployeeDTO.FromEntity(employee);
+                employeeDTO.State = EmployeeDTO.UPDATED;
+                dataGridRestClient.AddtoCache(employee.UUID, employeeDTO.ToJson());
             }
 
             return employee;
         }
 
-        private async Task<Employee> UpdateEmployeeFromSchedule(Employee employee)
-        {
-            if (!EmployeeExists(employee.EmployeeId))
-                throw new DbUpdateException("Entity " + employee.EmployeeId + " not found!");
-
-            var dbEmployee = context.Employees.AsNoTracking().Where(e => e.EmployeeId == employee.EmployeeId).Select(e => e).Single();
-
-            if (IsNotNull(dbEmployee))
-            {
-
-                context.Entry(employee).State = EntityState.Modified;
-
-                employee.UpdatedBy = "DotNetUser";
-                employee.UpdatedDate = DateTime.UtcNow;
-                employee.UUID = dbEmployee.UUID;
-                employee.CreateDate = dbEmployee.CreateDate;
-                employee.CreatedBy = dbEmployee.CreatedBy;
-                await context.SaveChangesAsync();
-
-            }
-
-            return employee;
-        }
-
-        public async Task DeleteEmployee(int id)
+        public async Task DeleteEmployee(long id)
         {
             if (!EmployeeExists(id))
                 throw new DbUpdateException("Entity " + id + " not found!");
@@ -153,7 +130,7 @@ namespace EmployeeNetCoreApp.Services
             dataGridRestClient.DeleteEmployeeFromCache(employee.UUID);
         }
 
-        private bool EmployeeExists(int id)
+        private bool EmployeeExists(long id)
         {
             return (context.Employees?.Any(e => e.EmployeeId == id)).GetValueOrDefault();
         }
@@ -163,7 +140,7 @@ namespace EmployeeNetCoreApp.Services
             return (context.Employees?.Any(e => e.UUID == uuid)).GetValueOrDefault();
         }
 
-        private int GetEmployeeCurrentVersion(int id)
+        private int GetEmployeeCurrentVersion(long id)
         {
             return context.Employees.Where(e => e.EmployeeId == id).Select(e => e.Version).SingleOrDefault();
         }
@@ -175,40 +152,58 @@ namespace EmployeeNetCoreApp.Services
             var dbEmployee = context.Employees.AsNoTracking().Where(e => e.UUID == uuid).Select(e => e).Single();
             return dbEmployee;
         }
-        
-
-        public async Task SyncCacheWithDatabase(CancellationToken cancellationToken)
-        {            
-            ISet<string> keys = await dataGridRestClient.GetAllKeysFromCache();
-            foreach (string key in keys)
-            {
-
-                Employee? employee = await dataGridRestClient.GetEmployeeFromCache(key);
-
-                if (EmployeeExists(key))
-                {
-                    Employee localEmployee = GetEmployeeByUUID(key);
-                    if (localEmployee.Version < employee.Version)
-                    {
-                        logger.LogInformation("Update employee {}", key);
-                        employee.EmployeeId = localEmployee.EmployeeId;
-                        await UpdateEmployeeFromSchedule(employee);
-                    }
-                }
-                else
-                {
-                    logger.LogInformation("Saving employee {}", key);
-                    employee.EmployeeId = 0;
-                    await SaveEmployee(employee);
-                }
-            }
-
-        }
 
         public Task<ISet<string>> GetAllEmployeesKeysInCache()
         {
             return dataGridRestClient.GetAllKeysFromCache();
         }
+
+        public async Task UpdateEntityFromCache(long employeeId)
+        {
+            if (!EmployeeExists(employeeId))
+                throw new Exception("Employee " + employeeId + " not found in the database!");
+
+            var dbEmployee = context.Employees.AsNoTracking().Where(e => e.EmployeeId == employeeId).Select(e => e).Single();
+            EmployeeDTO? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(dbEmployee.UUID);
+            if (IsNotNull(cacheEmployee))
+            {
+                Employee employee = cacheEmployee.ToEntity();
+                employee.EmployeeId = dbEmployee.EmployeeId;
+                context.Entry(employee).State = EntityState.Modified;
+
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Employee " + employeeId + " not found in the cache!");
+            }
+
+        }
+
+        public async Task ImportEntityFromCache(string uuid)
+        {
+            EmployeeDTO? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(uuid);
+            if (IsNotNull(cacheEmployee))
+            {
+                Employee employee = cacheEmployee.ToEntity();
+                if (EmployeeExists(uuid))
+                {
+                    //update
+                    var dbEmployee = context.Employees.AsNoTracking().Where(e => e.UUID == uuid).Select(e => e).Single();
+                    employee.EmployeeId = dbEmployee.EmployeeId;
+                    context.Entry(employee).State = EntityState.Modified;
+
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    //insert
+                    context.Entry(employee).State = EntityState.Modified;
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
     }
 }
 
