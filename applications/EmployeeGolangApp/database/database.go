@@ -12,8 +12,8 @@ import (
 )
 
 func ConnectDB() *mongo.Client {
-	Mongo_URL := "mongodb://" + env.GetDefault("MONGO_HOST", "127.0.0.1") + ":" + strconv.Itoa(env.GetIntDefault("MONGO_PORT", 27017))
-	client, err := mongo.NewClient(options.Client().ApplyURI(Mongo_URL))
+	MongoUrl := "mongodb://" + env.GetDefault("MONGO_USER", "root") + ":" + env.GetDefault("MONGO_PASSWD", "password") + "@" + env.GetDefault("MONGO_HOST", "127.0.0.1") + ":" + strconv.Itoa(env.GetIntDefault("MONGO_PORT", 27017))
+	client, err := mongo.NewClient(options.Client().ApplyURI(MongoUrl))
 
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +27,7 @@ func ConnectDB() *mongo.Client {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to mongoDB")
+	fmt.Println("Connecting to mongoDB")
 	return client
 }
 

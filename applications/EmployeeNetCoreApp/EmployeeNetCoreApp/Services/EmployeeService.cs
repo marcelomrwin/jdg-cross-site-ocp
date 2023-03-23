@@ -62,6 +62,8 @@ namespace EmployeeNetCoreApp.Services
 
             employee.CreatedBy = "DotNetUser";
             employee.CreateDate = DateTime.UtcNow;
+            employee.UpdatedBy = "DotNetUser";
+            employee.UpdatedDate = DateTime.UtcNow;
             employee.Version = 1;
 
             if (!IsNotNull(employee.UUID))
@@ -180,7 +182,7 @@ namespace EmployeeNetCoreApp.Services
 
         }
 
-        public async Task ImportEntityFromCache(string uuid)
+        public async Task<long> ImportEntityFromCache(string uuid)
         {
             EmployeeDTO? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(uuid);
             if (IsNotNull(cacheEmployee))
@@ -194,14 +196,17 @@ namespace EmployeeNetCoreApp.Services
                     context.Entry(employee).State = EntityState.Modified;
 
                     await context.SaveChangesAsync();
+                    return dbEmployee.EmployeeId;
                 }
                 else
                 {
                     //insert
-                    context.Entry(employee).State = EntityState.Modified;
+                    context.Employees.Add(employee);
                     await context.SaveChangesAsync();
+                    return employee.EmployeeId;
                 }
             }
+            return 0;
         }
 
     }

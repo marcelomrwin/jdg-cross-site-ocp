@@ -3,6 +3,7 @@ package com.redhat.developers.rest;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -168,10 +170,20 @@ public class EmployeeResource {
     @Path("/fromcache/{uuid}")
     public Response importEmployeeFromCache(@PathParam("uuid") String uuid) {
         try {
-            employeeService.importEmployeeFromCache(uuid);
+            Long employeeId = employeeService.importEmployeeFromCache(uuid);
+            return Response.status(Response.Status.CREATED).entity("Employee " + employeeId + " Updated successfully!").build();
         } catch (ServiceException se) {
             return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
         }
-        return Response.status(Response.Status.CREATED).entity("Employee Updated successfully!").build();
+    }
+
+    @OPTIONS
+    public Response getAllEmployeesKeysInCache() {
+        try {
+            Set<String> keys = employeeService.GetAllEmployeesKeysInCache();
+            return Response.ok(keys).build();
+        } catch (ServiceException se) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
+        }
     }
 }

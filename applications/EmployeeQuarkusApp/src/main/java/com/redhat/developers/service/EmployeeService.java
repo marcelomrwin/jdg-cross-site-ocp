@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -58,6 +59,8 @@ public class EmployeeService {
 
         employee.setCreateBy("QuarkusUser");
         employee.setCreateDate(LocalDateTime.now(ZoneId.of("UTC")));
+        employee.setUpdatedBy("QuarkusUser");
+        employee.setUpdatedDate(LocalDateTime.now(ZoneId.of("UTC")));
         if (Objects.isNull(employee.getUuid())) {
             employee.setUuid(UUID.randomUUID().toString());
         }
@@ -139,7 +142,7 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void importEmployeeFromCache(String uuid) {
+    public Long importEmployeeFromCache(String uuid) {
         EmployeeDTO cacheEmployee = dataGridRestClient.getEmployeeFromCache(cacheName, uuid);
 
         if (Objects.nonNull(cacheEmployee)) {
@@ -155,9 +158,14 @@ public class EmployeeService {
                 //insert
                 employeeRepository.persist(employee);
             }
+            return employee.getEmployeeId();
         } else {
             throw new ServiceException("Employee %s not found in the cache!", uuid);
         }
+    }
+
+    public Set<String> GetAllEmployeesKeysInCache(){
+        return dataGridRestClient.getAllKeysFromCache(cacheName,"keys");
     }
 
     private void insertOrUpdateCache(EmployeeDTO employeeDTO) {
@@ -184,47 +192,3 @@ public class EmployeeService {
     }
 
 }
-
-/*
-
-public async Task UpdateEntityFromCache(long employeeId)
-        {
-            if (!EmployeeExists(employeeId))
-                throw new Exception("Employee " + employeeId + " not found in the database!");
-
-            var dbEmployee = context.Employees.AsNoTracking().Where(e => e.EmployeeId == employeeId).Select(e => e).Single();
-            EmployeeDTO? cacheEmployee = await dataGridRestClient.GetEmployeeFromCache(dbEmployee.UUID);
-            if (IsNotNull(cacheEmployee))
-            {
-                Employee employee = cacheEmployee.ToEntity();
-                employee.EmployeeId = dbEmployee.EmployeeId;
-                context.Entry(employee).State = EntityState.Modified;
-
-                await context.SaveChangesAsync();
-            }
-            else
-            {
-                throw new Exception("Employee " + employeeId + " not found in the cache!");
-            }
-
-        }
-
-        [HttpPut("fromcache/{employeeId}")]
-    public async Task<IActionResult> UpdateEmployeeFromCache(long employeeId)
-    {
-        logger.LogInformation("CALL METHOD!");
-
-        try
-        {
-            await employeeService.UpdateEntityFromCache(employeeId);
-        }
-        catch (Exception e)
-        {
-            return NotFound(e.Message);
-        }
-
-        return Ok("Employee Updated successfully!");
-
-    }
-
- */

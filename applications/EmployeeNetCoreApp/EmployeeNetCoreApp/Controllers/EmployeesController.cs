@@ -100,7 +100,7 @@ public class EmployeesController : ControllerBase
             return NotFound(dbue.Message);
         }
 
-        return Ok("Deleted the Employee successfully !");
+        return NoContent();
     }
 
     [HttpOptions]
@@ -112,7 +112,7 @@ public class EmployeesController : ControllerBase
     // PUT: api/employees/fromcache/1
     [HttpPut("fromcache/{employeeId}")]
     public async Task<IActionResult> UpdateEmployeeFromCache(long employeeId)
-    {        
+    {
         try
         {
             await employeeService.UpdateEntityFromCache(employeeId);
@@ -127,19 +127,19 @@ public class EmployeesController : ControllerBase
     }
 
     // POST: api/employees/fromcache/abc-123
-    [HttpPost("fromcache/{employeeId}")]
+    [HttpPost("fromcache/{uuid}")]
     public async Task<IActionResult> ImportEmployeeFromCache(string uuid)
     {
         try
         {
-            await employeeService.ImportEntityFromCache(uuid);
+            long id = await employeeService.ImportEntityFromCache(uuid);
+            return StatusCode(201, "Employee id " + id + " Updated successfully!");
         }
         catch (Exception e)
         {
             return NotFound(e.Message);
         }
 
-        return StatusCode(201, "Employee Updated successfully!");
     }
 
 }

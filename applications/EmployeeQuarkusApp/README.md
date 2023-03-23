@@ -57,10 +57,11 @@ Easily start your Reactive RESTful Web Services
 
 ### Useful commands
 ```
-docker run --rm=true --name postgresql -e POSTGRES_USER=admin \
+docker run -d --rm --name postgresql -e POSTGRES_USER=admin \
            -e POSTGRES_PASSWORD=password -e POSTGRES_DB=employee_db \
            -p 5432:5432 postgres:15-alpine
            
 quarkus create app com.redhat.developers:EmployeeQuarkusApp
+
 quarkus dev -DdebugHost=0.0.0.0
 ```
