@@ -1,10 +1,14 @@
 FROM registry.access.redhat.com/ubi8/go-toolset
-COPY ./src .
+COPY . .
 
-RUN go mod init EmployeeGolangApp && \
-    go mod tidy && \
-    go build .
+RUN go build .
 
 FROM registry.access.redhat.com/ubi8/ubi-micro
+ENV MONGO_USER 'root'
+ENV MONGO_PASSWD 'password'
+ENV MONGO_HOST 'mongodb'
+ENV MONGO_PORT 27017
+ENV PORT=8080
 COPY --from=0 /opt/app-root/src/EmployeeGolangApp .
+EXPOSE $PORT
 CMD ./EmployeeGolangApp

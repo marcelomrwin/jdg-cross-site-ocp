@@ -1,6 +1,23 @@
 quarkus:
   log:
     level: INFO
+    category:
+      "com.redhat.developers":
+        level: INFO
+  hibernate-orm:
+    log:
+      sql: false
   flyway:
-    migrate-at-start: true
+    migrate-at-start: ${FLYWAY_MIGRATE:false}
     locations: db/migration
+  infinispan:
+    cache: employees
+    user: admin
+    password: password
+  rest-client:
+    infinispan-rest:
+      url: ${DG_PROTOCOL:https}://${DG_HOST:dg}:${DG_PORT:11222}
+      scope: javax.inject.Singleton
+      verify-host: false
+  tls:
+    trust-all: true

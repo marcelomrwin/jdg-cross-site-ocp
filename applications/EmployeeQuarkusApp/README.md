@@ -65,3 +65,10 @@ quarkus create app com.redhat.developers:EmployeeQuarkusApp
 
 quarkus dev -DdebugHost=0.0.0.0
 ```
+
+### Generate Docker images
+```
+./mvnw package -DskipTests -Pnative -Dquarkus.native.container-build=true
+docker build -f src/main/docker/Dockerfile.native-micro -t marcelodsales/jdg-employee-quarkus .
+docker run --rm -p 8080:8080 -e DATABASE_URL='host.docker.internal' marcelodsales/jdg-employee-quarkus
+```

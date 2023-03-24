@@ -7,11 +7,13 @@ import (
 	"EmployeeGolangApp/services"
 	"context"
 	"fmt"
+	"github.com/caitlinelfring/go-env-default"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
+	"strconv"
 )
 
 var (
@@ -61,5 +63,6 @@ func startGinServer() {
 
 	router := server.Group("/api")
 	employeeRouteController.EmployeeRoute(router)
-	log.Fatal(server.Run(":" + "9000"))
+	port := env.GetIntDefault("PORT", 9000)
+	log.Fatal(server.Run(":" + strconv.Itoa(port)))
 }
