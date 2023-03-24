@@ -16,12 +16,17 @@ namespace EmployeeNetCoreApp.Services
         private readonly ILogger<EmployeeService> logger;
         private readonly DataGridRestClient dataGridRestClient;
 
+        private string site;
+
 
         public EmployeeService(DataContext pContext, DataGridRestClient gridRestClient, ILogger<EmployeeService> pLogger)
         {
             context = pContext;
             this.dataGridRestClient = gridRestClient;
             logger = pLogger;
+            site = Environment.GetEnvironmentVariable("SITE");
+            if (site==null)
+                site = "default";
         }
 
         public async Task<Employee?> GetEmployee(long id)
@@ -60,9 +65,9 @@ namespace EmployeeNetCoreApp.Services
                 throw new Exception();
             }
 
-            employee.CreatedBy = "DotNetUser";
+            employee.CreatedBy = "DotNetUser-"+site;
             employee.CreateDate = DateTime.UtcNow;
-            employee.UpdatedBy = "DotNetUser";
+            employee.UpdatedBy = "DotNetUser-"+site;
             employee.UpdatedDate = DateTime.UtcNow;
             employee.Version = 1;
 
@@ -100,7 +105,7 @@ namespace EmployeeNetCoreApp.Services
 
                 context.Entry(employee).State = EntityState.Modified;
 
-                employee.UpdatedBy = "DotNetUser";
+                employee.UpdatedBy = "DotNetUser-"+site;
                 employee.UpdatedDate = DateTime.UtcNow;
                 employee.UUID = dbEmployee.UUID;
                 employee.CreateDate = dbEmployee.CreateDate;

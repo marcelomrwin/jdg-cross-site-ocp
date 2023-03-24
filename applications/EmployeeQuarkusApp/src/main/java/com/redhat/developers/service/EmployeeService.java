@@ -32,6 +32,9 @@ public class EmployeeService {
     @ConfigProperty(name = "quarkus.infinispan.cache")
     String cacheName;
 
+    @ConfigProperty(name = "app.site")
+    String site;
+
     @Inject
     EmployeeMapper employeeMapper;
 
@@ -57,9 +60,9 @@ public class EmployeeService {
     @Transactional
     public Employee saveEmployee(Employee employee) throws Exception {
 
-        employee.setCreateBy("QuarkusUser");
+        employee.setCreateBy("QuarkusUser-"+site);
         employee.setCreateDate(LocalDateTime.now(ZoneId.of("UTC")));
-        employee.setUpdatedBy("QuarkusUser");
+        employee.setUpdatedBy("QuarkusUser-"+site);
         employee.setUpdatedDate(LocalDateTime.now(ZoneId.of("UTC")));
         if (Objects.isNull(employee.getUuid())) {
             employee.setUuid(UUID.randomUUID().toString());
@@ -94,7 +97,7 @@ public class EmployeeService {
         dbEmployee.setDepartment(employee.getDepartment());
         dbEmployee.setDesignation(employee.getDesignation());
         dbEmployee.setVersion(dbEmployee.getVersion() + 1);
-        dbEmployee.setUpdatedBy("QuarkusUser");
+        dbEmployee.setUpdatedBy("QuarkusUser-"+site);
         dbEmployee.setUpdatedDate(LocalDateTime.now(ZoneId.of("UTC")));
 
         employeeRepository.persistAndFlush(dbEmployee);

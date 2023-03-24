@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/caitlinelfring/go-env-default"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -101,10 +102,10 @@ func (e EmployeeService) GetEmployeeByUUID(uuid string) (*models.Employee, error
 
 func (e EmployeeService) SaveEmployee(employee *models.Employee) (*models.Employee, error) {
 	employee.CreateDate = time.Now().UTC()
-	employee.CreatedBy = "GolangUser"
+	employee.CreatedBy = "GolangUser-" + env.GetDefault("SITE", "default")
 	employee.Version = 1
 	employee.UUID = uuid.New().String()
-	employee.UpdatedBy = "GolangUser"
+	employee.UpdatedBy = "GolangUser-" + env.GetDefault("SITE", "default")
 	employee.UpdatedDate = time.Now().UTC()
 
 	res, err := e.employeeCollection.InsertOne(e.ctx, employee)
@@ -163,7 +164,7 @@ func (e EmployeeService) UpdateEmployee(employeeId string, employee *models.Empl
 	}
 
 	employee.Version = dbEmployee.Version + 1
-	employee.UpdatedBy = "GolangUser"
+	employee.UpdatedBy = "GolangUser-" + env.GetDefault("SITE", "default")
 	employee.UpdatedDate = time.Now().UTC()
 	employee.UUID = dbEmployee.UUID
 	employee.CreatedBy = dbEmployee.CreatedBy

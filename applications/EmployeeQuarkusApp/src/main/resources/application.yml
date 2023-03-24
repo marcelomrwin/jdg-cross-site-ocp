@@ -14,6 +14,8 @@ quarkus:
       url: jdbc:postgresql://${DATABASE_URL:postgresql}:5432/employee_db
   jackson:
     fail-on-unknown-properties: false
+app:
+  site: ${SITE:default}
 mp:
   openapi:
     extensions:
