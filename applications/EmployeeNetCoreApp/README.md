@@ -80,3 +80,10 @@ oc port-forward $(oc get pods -l name=mssql -o=custom-columns=NAME:.metadata.nam
 oc new-app jdg-employee-dotnet
 oc expose svc/jdg-employee-dotnet
 ```
+
+## If need to clear the database
+```
+DROP TABLE dbo.__EFMigrationsHistory;
+DROP TABLE dbo.Employees;
+DROP TABLE dbo.Departments;
+```

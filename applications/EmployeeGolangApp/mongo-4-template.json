@@ -1,0 +1,182 @@
+{
+  "kind": "Template",
+  "apiVersion": "template.openshift.io/v1",
+  "metadata": {
+    "name": "mongo4",
+    "annotations": {
+      "openshift.io/display-name": "Mongodb 4.4",
+      "description": "NOSQL database management system"
+    }
+  },
+  "objects": [
+    {
+      "kind": "Secret",
+      "apiVersion": "v1",
+      "stringData": {
+        "MONGO_INITDB_ROOT_USERNAME": "${MONGODB_USER}",
+        "MONGO_INITDB_ROOT_PASSWORD": "${MONGODB_PASSWORD}",
+        "MONGODB_DATABASE": "${MONGODB_DATABASE}"
+      },
+      "metadata": {
+        "name": "${NAME}-secret"
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Exposes the server"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "tcp",
+            "port": 27017,
+            "targetPort": 27017
+          }
+        ],
+        "selector": {
+          "name": "${NAME}"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "Defines how to deploy the database server"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate"
+        },
+        "replicas": 1,
+        "selector": {
+          "name": "${NAME}"
+        },
+        "template": {
+          "metadata": {
+            "name": "${NAME}",
+            "labels": {
+              "name": "${NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}",
+                "image": "mongo:4.4",
+                "ports": [
+                  {
+                    "containerPort": 27017
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "mountPath": "/data/db",
+                    "name": "mongo-data"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "MONGODB_DATABASE",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "${NAME}-secret",
+                        "key": "MONGODB_DATABASE"
+                      }
+                    }
+                  },
+                  {
+                    "name": "MONGO_INITDB_ROOT_USERNAME",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "${NAME}-secret",
+                        "key": "MONGO_INITDB_ROOT_USERNAME"
+                      }
+                    }
+                  },
+                  {
+                    "name": "MONGO_INITDB_ROOT_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "${NAME}-secret",
+                        "key": "MONGO_INITDB_ROOT_PASSWORD"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "mongo-data",
+                "persistentVolumeClaim": {
+                  "claimName": "${NAME}-pvc"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "kind": "PersistentVolumeClaim",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}-pvc"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "${VOLUME_CAPACITY}"
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "NAME",
+      "displayName": "Name",
+      "description": "The name assigned to all of the frontend objects defined in this template.",
+      "required": true,
+      "value": "mongodb"
+    },
+    {
+      "name": "MONGODB_USER",
+      "displayName": "Mongo User to connect",
+      "description": "Admin User",
+      "required": true,
+      "value": "root"
+    },
+    {
+      "name": "MONGODB_PASSWORD",
+      "displayName": "Administrator Password",
+      "generate": "expression",
+      "from": "aA1[a-zA-Z0-9]{8}"
+    },
+    {
+      "name": "MONGODB_DATABASE",
+      "displayName": "Mongo Initial DB",
+      "description": "Initial DB",
+      "required": true
+    },
+    {
+      "name": "VOLUME_CAPACITY",
+      "displayName": "Persistent Volume Capacity",
+      "description": "Volume space available for data, e.g. 512Mi, 8Gi",
+      "value": "512Mi",
+      "required": true
+    }
+  ]
+}

@@ -70,5 +70,16 @@ quarkus dev -DdebugHost=0.0.0.0
 ```
 ./mvnw package -DskipTests -Pnative -Dquarkus.native.container-build=true
 docker build -f src/main/docker/Dockerfile.native-micro -t marcelodsales/jdg-employee-quarkus .
+docker push docker.io/marcelodsales/jdg-employee-quarkus
 docker run --rm -p 8080:8080 -e DATABASE_URL='host.docker.internal' marcelodsales/jdg-employee-quarkus
+```
+
+### Deploy in Openshift
+```
+oc process --parameters postgresql-persistent -n openshift
+oc new-app --template=postgresql-persistent -p POSTGRESQL_USER=admin -p POSTGRESQL_PASSWORD=password -p POSTGRESQL_DATABASE=employee_db -p POSTGRESQL_VERSION=latest -l app=jdg-employee
+oc port-forward $(oc get pods -l deploymentconfig=postgresql -o=custom-columns=NAME:.metadata.name --no-headers) 5432:5432
+
+oc new-app --name=jdg-employee-quarkus --image=marcelodsales/jdg-employee-quarkus DATABASE_USER=admin DATABASE_PASS=password DATABASE_URL=postgresql SITE=site-0 DG_HOST=dg DG_PORT=11222 -l app=jdg-employee 
+oc expose service/jdg-employee-quarkus
 ```
