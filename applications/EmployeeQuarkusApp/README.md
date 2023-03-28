@@ -80,6 +80,6 @@ oc process --parameters postgresql-persistent -n openshift
 oc new-app --template=postgresql-persistent -p POSTGRESQL_USER=admin -p POSTGRESQL_PASSWORD=password -p POSTGRESQL_DATABASE=employee_db -p POSTGRESQL_VERSION=latest -l app=jdg-employee
 oc port-forward $(oc get pods -l deploymentconfig=postgresql -o=custom-columns=NAME:.metadata.name --no-headers) 5432:5432
 
-oc new-app --name=jdg-employee-quarkus --image=marcelodsales/jdg-employee-quarkus DATABASE_USER=admin DATABASE_PASS=password DATABASE_URL=postgresql SITE=site-0 DG_HOST=dg DG_PORT=11222 -l app=jdg-employee 
+oc new-app --name=jdg-employee-quarkus --image=marcelodsales/jdg-employee-quarkus DATABASE_USER=admin DATABASE_PASS=password DATABASE_URL=postgresql SITE=site-1 DG_HOST=dg DG_PORT=11222 -l app=jdg-employee 
 oc expose service/jdg-employee-quarkus
 ```

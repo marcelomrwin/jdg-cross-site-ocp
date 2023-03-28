@@ -1,0 +1,25 @@
+---
+- name: Demo RHDG and Cross Site Replication
+  hosts: localhost
+  connection: local
+  vars:
+    site1_base_url: rhdg-xsite.apps.ocp4.masales.cloud
+    site2_base_url: datagrid.apps.ocp4.snoussi.xyz
+    quarkus_app: jdg-employee-quarkus
+    dotnet_app: jdg-employee-dotnet
+    golang_app: jdg-employee-golang
+  
+  tasks:
+    
+    - name: "Listing all employees in the Quarkus microservice on site-1"
+      ansible.builtin.uri:
+        url: "http://{{ quarkus_app }}-{{ site1_base_url}}/api/employees"
+        method: GET
+        status_code: 200
+        return_content: true
+        validate_certs: false
+      register: employees
+    
+    - name: "Printing employees present in Quarkus microservices on Site 1"
+      debug:
+        var: employees.content

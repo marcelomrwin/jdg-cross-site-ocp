@@ -1,6 +1,6 @@
 {
     "kind": "Template",
-    "apiVersion": "v1",
+    "apiVersion": "template.openshift.io/v1",
     "metadata": {
         "name": "mssql2022",
         "annotations": {
@@ -67,6 +67,8 @@
                         }
                     },
                     "spec": {
+                        "serviceAccount": "mssql",                                
+                        "serviceAccountName":"mssql",
                         "containers": [
                             {
                                 "name": "db",
@@ -75,9 +77,7 @@
                                     {
                                         "containerPort": 1433
                                     }
-                                ],
-                                "serviceAccount": "mssql",                                
-                                "serviceAccountName":"mssql",
+                                ],                                
                                 "volumeMounts": [
                                     {
                                         "mountPath": "/var/opt/mssql",

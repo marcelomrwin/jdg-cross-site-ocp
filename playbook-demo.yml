@@ -1,0 +1,198 @@
+---
+- name: Demo RHDG and Cross Site Replication
+  hosts: localhost
+  connection: local
+  vars:
+    site1_base_url: rhdg-xsite.apps.ocp4.masales.cloud
+    site2_base_url: datagrid.apps.ocp4.snoussi.xyz
+    quarkus_app: jdg-employee-quarkus
+    dotnet_app: jdg-employee-dotnet
+    golang_app: jdg-employee-golang
+  
+  tasks:
+    - name: "Making sure it is possible to access the applications"
+      ansible.builtin.uri:
+        url: "http://{{item.appName}}-{{item.appSite}}/api/employees"
+        return_content: false
+        status_code: 200
+      with_items:
+        - { appName: "{{ quarkus_app }}", appSite: "{{ site1_base_url }}"}
+        - { appName: "{{ dotnet_app }}", appSite: "{{site1_base_url}}"}
+        - { appName: "{{ quarkus_app }}", appSite: "{{site2_base_url}}"}
+        - { appName: "{{ golang_app }}", appSite: "{{site2_base_url}}"}
+    
+    - name: "List caches in site 1"
+      pause:
+        prompt: "Let's list the caches configured in site 1 (Press Return to continue...)"
+
+    - name: "Listing caches in Site 1"
+      ansible.builtin.uri:
+        url: "https://dg-external-{{ site1_base_url}}/rest/v2/caches"
+        return_content: false
+        validate_certs: false
+      register: caches_site1
+      failed_when: "'employees' not in caches_site1.json"
+
+    - name: "Printing the caches in Site 1"
+      debug:
+        var: caches_site1.json
+    
+    - name: "List caches in site 2"
+      pause:
+        prompt: "Let's list the caches configured in site 2 (Press return to continue...)"
+
+    - name: "Listing caches in Site 2"
+      ansible.builtin.uri:
+        url: "https://dg-external-{{ site2_base_url}}/rest/v2/caches"
+        return_content: false
+        validate_certs: false
+      register: caches_site2
+      failed_when: "'employees' not in caches_site2.json"
+
+    - name: "Printing the caches in Site 2"
+      debug:
+        var: caches_site2.json
+
+    - name: "Prompt create user in site 1"
+      pause:
+        prompt: "\n---\nLet's create an employee using the quarkus microservice in site-1 and verify that his UUID has been included in site-1's cache.\n(Press return to continue...)"
+    
+    - name: "Creating an employee via the Quarkus microservice on site-1"
+      ansible.builtin.uri:
+        url: "http://{{ quarkus_app }}-{{ site1_base_url}}/api/employees"
+        method: POST
+        headers:
+          Content-Type: application/json
+        body_format: json
+        body: |-
+          {
+            "fullName": "User Test Demo",
+            "designation": "RHDG Specialist",
+            "department": "IT"
+          }          
+        status_code: 201        
+        return_content: false
+        validate_certs: false
+      register: post_employee
+      failed_when: "'employeeId' not in post_employee.json"
+
+    - name: "Prompt user created in site 1"
+      pause:
+        prompt: "\n---\nThe user was successfully created in site-1.\nYou can query the objects in the cache via the https://dg-external-{{site1_base_url}}/console/cache/employees using the \"Entries\" tab.\nLet's list the identifiers (keys) present in the cache for site-1.\n(Press return to continue...)"
+
+    - name: "Listing keys present in site-1"
+      ansible.builtin.uri:
+        url: "https://dg-external-{{site1_base_url}}/rest/v2/caches/employees?action=keys"
+        return_content: false
+        validate_certs: false
+        method: GET
+      register: caches_site1
+    
+    - name: "Printing the keys present in the cache of Site 1"
+      debug:
+        var: caches_site1.json
+
+    - name: "Prompt user created in site 1"
+      pause:
+        prompt: "\n--\nNow let's list the entries present in site-2's cache. Using the features of the replicated cache between different data centers the employee uuid '{{ caches_site1.json[0]}}' created should also be present in the site-2 cache.\n(Press return to continue...)"
+    
+    - name: "Listing keys present in site-2"
+      ansible.builtin.uri:
+        url: "https://dg-external-{{site2_base_url}}/rest/v2/caches/employees?action=keys"
+        return_content: false
+        validate_certs: false
+        method: GET
+      register: caches_site2
+      failed_when: "'caches_site1.json[0]' not in caches_site2.json"
+    
+    - name: "Printing the keys present in the cache of Site 2"
+      debug:
+        var: caches_site2.json
+
+    - name: "Prompt user created in site 1"
+      pause:
+        prompt: "\n--\nYou can check the employee transferred to the site-2 cache via URL https://dg-external-{{site2_base_url}}/console/cache/employees using the \"Entries\" tab. Success! we have achieved our first goal which was to transport an employee created in a cache in the site-1 cluster to the site-2 cluster almost instantly.\n(Press return to continue...)"
+
+    - pause:
+        prompt: "\n--\nWe will now create another employee using the Golang application in site-2.\n(Press return to continue...)"
+    
+    - name: "Creating an employee via the Golang microservice on site-2"
+      ansible.builtin.uri:
+        url: "http://{{ golang_app }}-{{ site2_base_url}}/api/employees"
+        method: POST
+        headers:
+          Content-Type: application/json
+        body_format: json
+        body: |-
+          {
+            "fullName": "User Test Demo II",
+            "designation": "RHDG Specialist",
+            "department": "IT"
+          }          
+        status_code: 201        
+        return_content: false
+        validate_certs: false
+      register: post_employee
+      failed_when: "'employeeId' not in post_employee.json"
+
+    - pause:
+        prompt: "\n--\nThe employee has been successfully created. If you wish, you can query the cached object UUID {{post_employee.json.uuid}} using the Data Grid console in \nsite-1 https://dg-external-{{site1_base_url}}/console/cache/employees or \nsite-2 https://dg-external-{{site2_base_url}}/console/cache/employees\n(Press return to continue...)"
+
+    - pause:
+        prompt: "\n--\nNow we will import the employee created through the Golang microservice from site-2 into the Net Core microservice deployed in site-1.\n(Press return to continue...)"
+
+    - name: "Importing an employee created via the Golang microservice on site-2 into Net Core microservice in site-1"
+      ansible.builtin.uri:
+        url: "http://{{ dotnet_app }}-{{ site1_base_url}}/api/employees/fromcache/{{post_employee.json.uuid}}"
+        method: POST        
+        status_code: 201        
+        return_content: false
+        validate_certs: false
+      register: import_employee
+      failed_when: "'Employee' not in import_employee.json"
+
+    - pause:
+        prompt: "\n--\nWonderful, from this point on we have the same entity being managed by two totally independent microservices.\nGolang Microservice in site-2 and Net Core Microservice in site-1,\nconnected only by the cache that keeps the latest version of the employee.\n(Press return to continue...)"
+
+    - pause:
+        prompt: "\n--\nRight now, the most up-to-date version of the employee UUID {{post_employee.json.uuid}} is 1, both the cache and the microservices are with exactly the same version. Let's update this employee to version 2 via the Net Core microservice in site-1.\n(Press return to continue...)"
+
+    - name: "Updating an employee via the Net Core microservice on site-1"
+      ansible.builtin.uri:
+        url: "http://{{ dotnet_app }}-{{ site1_base_url}}/api/employees/{{}}"
+        method: PUT
+        headers:
+          Content-Type: application/json
+        body_format: json
+        body: |-
+          {
+            "employeeId": "{{}}"
+            "fullName": "User Test Demo II",
+            "designation": "RHDG Specialist",
+            "department": "IT"
+          }          
+        status_code: 201        
+        return_content: false
+        validate_certs: false
+      register: post_employee
+      failed_when: "'employeeId' not in post_employee.json"
+
+    - name: "Prompt list employees in the quarkus database"
+      pause:
+        prompt: "\n--\nNow, let's list the employees present in the Quarkus application database.\n(Press return to continue...)"
+    
+    - name: "Listing all employees in the Quarkus microservice on site-1"
+      ansible.builtin.uri:
+        url: "http://{{ quarkus_app }}-{{ site1_base_url}}/api/employees"
+        method: GET
+        status_code: 200
+        return_content: true
+        validate_certs: false
+      register: employees
+    
+    - name: "Printing employees present in Quarkus microservices on Site 1"
+      debug:
+        var: employees.content
+
+
+        

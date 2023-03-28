@@ -48,7 +48,6 @@ docker build --tag marcelodsales/jdg-employee-dotnet -f EmployeeNetCoreApp/Docke
 ```
 oc create -f https://raw.githubusercontent.com/redhat-developer/s2i-dotnetcore/master/dotnet_imagestreams.json
 oc new-build --name jdg-employee-dotnet --strategy=docker -D - < EmployeeNetCoreApp/Dockerfile
-oc start-build jdg-employee-dotnet --from-dir=. --follow --wait
 oc create serviceaccount mssql
 oc adm policy add-scc-to-user anyuid -z mssql --as system:admin
 oc apply -f mssql-2022-ocp-template.json
@@ -76,7 +75,7 @@ oc port-forward $(oc get pods -l name=mssql -o=custom-columns=NAME:.metadata.nam
   oc patch dc/mssql --patch '{"spec":{"template": {"spec":{"serviceAccountName": "mssql"}}}}'
   oc rollout latest mssql  
 }
-
+oc start-build jdg-employee-dotnet --from-dir=. --follow --wait
 oc new-app jdg-employee-dotnet
 oc expose svc/jdg-employee-dotnet
 ```

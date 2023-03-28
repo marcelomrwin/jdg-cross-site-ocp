@@ -21,7 +21,7 @@ oc apply -f mongo-4-template.json
 oc process --parameters mongo4
 oc new-app --template=mongo4 -p MONGODB_USER=root -p MONGODB_PASSWORD=password -p MONGODB_DATABASE=employeedb -p VOLUME_CAPACITY=1Gi -l app=jdg-employee
 oc port-forward $(oc get pods -l deploymentconfig=mongodb -o=custom-columns=NAME:.metadata.name --no-headers) 27017:27017
-oc new-app --name=jdg-employee-golang --image=marcelodsales/jdg-employee-golang MONGO_USER=root MONGO_PASSWD=password MONGO_HOST=mongodb MONGO_PORT=27017 SITE=site-0 CACHE_HOST=dg -l app=jdg-employee 
+oc new-app --name=jdg-employee-golang --image=marcelodsales/jdg-employee-golang MONGO_USER=root MONGO_PASSWD=password MONGO_HOST=mongodb MONGO_PORT=27017 SITE=site-1 CACHE_HOST=dg -l app=jdg-employee 
 oc expose service/jdg-employee-golang
 ```
 
