@@ -15,6 +15,7 @@ namespace EmployeeNetCoreApp.Services
 		public Task UpdateEntityFromCache(long employeeId);
 
 		public Task<long> ImportEntityFromCache(string uuid);
+		public Task<Employee> GetEmployeeByUUID(string uuid);
 	}
 }
 

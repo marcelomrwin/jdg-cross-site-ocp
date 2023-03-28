@@ -2,6 +2,7 @@ package routes
 
 import (
 	"EmployeeGolangApp/controllers"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,4 +25,5 @@ func (r *EmployeeRouteController) EmployeeRoute(rg *gin.RouterGroup) {
 	router.OPTIONS("/", r.employeeController.GetAllEmployeesKeysInCache)
 	router.PUT("/fromcache/:employeeId", r.employeeController.UpdateEntityFromCache)
 	router.POST("/fromcache/:uuid", r.employeeController.ImportEmployeeFromCache)
+	router.GET("/uuid/:uuid", r.employeeController.FindEmployeeByUUID)
 }

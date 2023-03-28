@@ -42,6 +42,7 @@ https://developers.redhat.com/articles/2022/07/07/add-infinispan-cache-your-aspn
 ## Build image
 ```
 docker build --tag marcelodsales/jdg-employee-dotnet -f EmployeeNetCoreApp/Dockerfile .
+docker push docker.io/marcelodsales/jdg-employee-dotnet
 ```
 
 ## Openshift

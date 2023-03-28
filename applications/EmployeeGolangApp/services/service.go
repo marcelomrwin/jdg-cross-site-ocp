@@ -6,14 +6,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/caitlinelfring/go-env-default"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"strings"
-	"time"
 )
 
 type IEmployeeService interface {
@@ -92,7 +93,7 @@ func (e EmployeeService) GetEmployeeByUUID(uuid string) (*models.Employee, error
 
 	if err := e.employeeCollection.FindOne(e.ctx, query).Decode(&employee); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("no document with that Id exists")
+			return nil, errors.New("no document with that uuid exists")
 		}
 		return nil, err
 	}

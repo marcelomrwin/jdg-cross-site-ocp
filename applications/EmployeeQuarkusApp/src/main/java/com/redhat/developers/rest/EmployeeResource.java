@@ -60,24 +60,9 @@ public class EmployeeResource {
         return Response.ok(employee.get()).build();
     }
 
-    @APIResponse(
-            responseCode = "201",
-            description = "Employee Created",
-            content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(type = SchemaType.OBJECT, implementation = Employee.class)
-            )
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Invalid Employee",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON)
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Employee already exists for employeeId",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON)
-    )
+    @APIResponse(responseCode = "201", description = "Employee Created", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(type = SchemaType.OBJECT, implementation = Employee.class)))
+    @APIResponse(responseCode = "400", description = "Invalid Employee", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+    @APIResponse(responseCode = "400", description = "Employee already exists for employeeId", content = @Content(mediaType = MediaType.APPLICATION_JSON))
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response saveEmployee(@NotNull @Valid Employee employee, @Context UriInfo uriInfo) {
@@ -96,38 +81,17 @@ public class EmployeeResource {
                 .build();
     }
 
-    @APIResponse(
-            responseCode = "200",
-            description = "Employee updated",
-            content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(type = SchemaType.OBJECT, implementation = Employee.class)
-            )
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Invalid Employee",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON)
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Employee object does not have employeeId",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON)
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Path variable employeeId does not match Employee.employeeId",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON)
-    )
-    @APIResponse(
-            responseCode = "404",
-            description = "No Employee found for employeeId provided",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON)
-    )
+    @APIResponse(responseCode = "200", description = "Employee updated", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(type = SchemaType.OBJECT, implementation = Employee.class)))
+    @APIResponse(responseCode = "400", description = "Invalid Employee", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+    @APIResponse(responseCode = "400", description = "Employee object does not have employeeId", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+    @APIResponse(responseCode = "400", description = "Path variable employeeId does not match Employee.employeeId", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+    @APIResponse(responseCode = "404", description = "No Employee found for employeeId provided", content = @Content(mediaType = MediaType.APPLICATION_JSON))
     @PUT
     @Path("/{employeeId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateEmployee(@Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId, @NotNull @Valid Employee employee) {
+    public Response updateEmployee(
+            @Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId,
+            @NotNull @Valid Employee employee) {
         try {
             Employee updatedEmployee = employeeService.updateEmployee(employee);
             return Response
@@ -145,7 +109,8 @@ public class EmployeeResource {
 
     @DELETE
     @Path("/{employeeId}")
-    public Response removeEmployee(@Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId) {
+    public Response removeEmployee(
+            @Parameter(name = "employeeId", required = true) @PathParam("employeeId") Long employeeId) {
         try {
             employeeService.deleteEmployee(employeeId);
         } catch (Exception e) {
@@ -171,7 +136,8 @@ public class EmployeeResource {
     public Response importEmployeeFromCache(@PathParam("uuid") String uuid) {
         try {
             Long employeeId = employeeService.importEmployeeFromCache(uuid);
-            return Response.status(Response.Status.CREATED).entity("Employee " + employeeId + " Updated successfully!").build();
+            return Response.status(Response.Status.CREATED).entity("Employee " + employeeId + " Updated successfully!")
+                    .build();
         } catch (ServiceException se) {
             return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
         }
@@ -182,6 +148,21 @@ public class EmployeeResource {
         try {
             Set<String> keys = employeeService.GetAllEmployeesKeysInCache();
             return Response.ok(keys).build();
+        } catch (ServiceException se) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/uuid/{uuid}")
+    public Response findEmployeeByUUID(@NotNull @PathParam("uuid") String uuid) {
+        try {
+
+            Optional<Employee> employee = employeeService.getEmployeeByUUID(uuid);
+            if (!employee.isPresent())
+                return Response.status(Response.Status.NOT_FOUND).build();
+
+            return Response.ok(employee.get()).build();
         } catch (ServiceException se) {
             return Response.status(Response.Status.BAD_REQUEST).entity(se.getMessage()).build();
         }

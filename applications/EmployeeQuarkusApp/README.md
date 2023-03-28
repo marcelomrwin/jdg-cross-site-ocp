@@ -83,3 +83,8 @@ oc port-forward $(oc get pods -l deploymentconfig=postgresql -o=custom-columns=N
 oc new-app --name=jdg-employee-quarkus --image=marcelodsales/jdg-employee-quarkus DATABASE_USER=admin DATABASE_PASS=password DATABASE_URL=postgresql SITE=site-1 DG_HOST=dg DG_PORT=11222 -l app=jdg-employee 
 oc expose service/jdg-employee-quarkus
 ```
+
+## Update Openshift ImageStream
+```
+oc tag docker.io/marcelodsales/jdg-employee-quarkus:latest jdg-employee-quarkus:latest
+```

@@ -142,5 +142,19 @@ public class EmployeesController : ControllerBase
 
     }
 
+    // GET: api/Employees/1
+    [HttpGet("uuid/{uuid}")]
+    public async Task<ActionResult<Employee>> GetEmployeeByUUID(string uuid)
+    {
+        var employee = await employeeService.GetEmployeeByUUID(uuid);
+
+        if (employee == null)
+        {
+            return NotFound();
+        }
+
+        return employee;
+    }
+
 }
 

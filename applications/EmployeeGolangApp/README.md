@@ -25,6 +25,11 @@ oc new-app --name=jdg-employee-golang --image=marcelodsales/jdg-employee-golang 
 oc expose service/jdg-employee-golang
 ```
 
+## Update imagestream
+```
+oc tag docker.io/marcelodsales/jdg-employee-golang:latest jdg-employee-golang:latest
+```
+
 ### If need to delete app
 ```
 oc delete dc mongodb

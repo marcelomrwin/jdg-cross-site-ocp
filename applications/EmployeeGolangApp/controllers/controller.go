@@ -3,9 +3,10 @@ package controllers
 import (
 	"EmployeeGolangApp/models"
 	"EmployeeGolangApp/services"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type EmployeeController struct {
@@ -78,6 +79,23 @@ func (controller *EmployeeController) FindEmployeeById(ctx *gin.Context) {
 
 	if err != nil {
 		if strings.Contains(err.Error(), "Id exists") {
+			ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, employee)
+}
+
+func (controller *EmployeeController) FindEmployeeByUUID(ctx *gin.Context) {
+	uuid := ctx.Param("uuid")
+
+	employee, err := controller.employeeService.GetEmployeeByUUID(uuid)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "uuid exists") {
 			ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": err.Error()})
 			return
 		}

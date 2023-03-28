@@ -154,8 +154,12 @@ namespace EmployeeNetCoreApp.Services
 
         private static bool IsNotNull([NotNullWhen(true)] object? obj) => obj != null;
 
-        private Employee GetEmployeeByUUID(string uuid)
+        public async Task<Employee> GetEmployeeByUUID(string uuid)
         {
+            if (!EmployeeExists(uuid))
+                //throw new Exception("Employee " + uuid + " not found in the database!");
+                return null;
+
             var dbEmployee = context.Employees.AsNoTracking().Where(e => e.UUID == uuid).Select(e => e).Single();
             return dbEmployee;
         }
