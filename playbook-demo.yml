@@ -55,7 +55,7 @@
 
     - name: "Prompt create user in site 1"
       pause:
-        prompt: "\n---\nLet's create an employee using the quarkus microservice in site-1 and verify that his UUID has been included in site-1's cache.\n(Press return to continue...)"
+        prompt: "-\nLet's create an employee using the quarkus microservice in site-1 and verify that his UUID has been included in site-1's cache.\n(Press return to continue...)"
     
     - name: "Creating an employee via the Quarkus microservice on site-1"
       ansible.builtin.uri:
@@ -70,7 +70,7 @@
             "designation": "RHDG Specialist",
             "department": "IT"
           }          
-        status_code: 201        
+        status_code: 201
         return_content: false
         validate_certs: false
       register: post_employee
@@ -78,7 +78,7 @@
 
     - name: "Prompt user created in site 1"
       pause:
-        prompt: "\n---\nThe user was successfully created in site-1.\nYou can query the objects in the cache via the https://dg-external-{{site1_base_url}}/console/cache/employees using the \"Entries\" tab.\nLet's list the identifiers (keys) present in the cache for site-1.\n(Press return to continue...)"
+        prompt: "-\nThe user was successfully created in site-1.\nYou can query the objects in the cache via the https://dg-external-{{site1_base_url}}/console/cache/employees using the \"Entries\" tab.\nLet's list the identifiers (keys) present in the cache for site-1.\n(Press return to continue...)"
 
     - name: "Listing keys present in site-1"
       ansible.builtin.uri:
@@ -94,7 +94,7 @@
 
     - name: "Prompt user created in site 1"
       pause:
-        prompt: "\n--\nNow let's list the entries present in site-2's cache. Using the features of the replicated cache between different data centers the employee uuid '{{ caches_site1.json[0]}}' created should also be present in the site-2 cache.\n(Press return to continue...)"
+        prompt: "\nNow let's list the entries present in site-2's cache. Using the features of the replicated cache between different data centers the employee uuid '{{ caches_site1.json[0]}}' created should also be present in the site-2 cache.\n(Press return to continue...)"
     
     - name: "Listing keys present in site-2"
       ansible.builtin.uri:
@@ -103,7 +103,7 @@
         validate_certs: false
         method: GET
       register: caches_site2
-      failed_when: "'caches_site1.json[0]' not in caches_site2.json"
+      failed_when: caches_site1.json[0] not in caches_site2.json
     
     - name: "Printing the keys present in the cache of Site 2"
       debug:
@@ -111,14 +111,14 @@
 
     - name: "Prompt user created in site 1"
       pause:
-        prompt: "\n--\nYou can check the employee transferred to the site-2 cache via URL https://dg-external-{{site2_base_url}}/console/cache/employees using the \"Entries\" tab. Success! we have achieved our first goal which was to transport an employee created in a cache in the site-1 cluster to the site-2 cluster almost instantly.\n(Press return to continue...)"
+        prompt: "\nYou can check the employee transferred to the site-2 cache via URL https://dg-external-{{site2_base_url}}/console/cache/employees using the \"Entries\" tab.\nSuccess! we have achieved our first goal, which was to transport an employee created in a cache in the site-1 cluster to the site-2 cluster almost instantly.\n(Press return to continue...)"
 
     - pause:
-        prompt: "\n--\nWe will now create another employee using the Golang application in site-2.\n(Press return to continue...)"
+        prompt: "\nWe will now create another employee using the Golang application in site-2.\n(Press return to continue...)"
     
     - name: "Creating an employee via the Golang microservice on site-2"
       ansible.builtin.uri:
-        url: "http://{{ golang_app }}-{{ site2_base_url}}/api/employees"
+        url: "http://{{ golang_app }}-{{ site2_base_url}}/api/employees/"
         method: POST
         headers:
           Content-Type: application/json
@@ -136,50 +136,108 @@
       failed_when: "'employeeId' not in post_employee.json"
 
     - pause:
-        prompt: "\n--\nThe employee has been successfully created. If you wish, you can query the cached object UUID {{post_employee.json.uuid}} using the Data Grid console in \nsite-1 https://dg-external-{{site1_base_url}}/console/cache/employees or \nsite-2 https://dg-external-{{site2_base_url}}/console/cache/employees\n(Press return to continue...)"
+        prompt: "\nThe employee has been successfully created. If you wish, you can query the cached object UUID {{post_employee.json.uuid}} using the Data Grid console in \nsite-1 https://dg-external-{{site1_base_url}}/console/cache/employees or \nsite-2 https://dg-external-{{site2_base_url}}/console/cache/employees\n(Press return to continue...)"
 
     - pause:
-        prompt: "\n--\nNow we will import the employee created through the Golang microservice from site-2 into the Net Core microservice deployed in site-1.\n(Press return to continue...)"
+        prompt: "\nNow we will import the employee created through the Golang microservice from site-2 into the Net Core microservice deployed in site-1.\n(Press return to continue...)"
 
     - name: "Importing an employee created via the Golang microservice on site-2 into Net Core microservice in site-1"
       ansible.builtin.uri:
         url: "http://{{ dotnet_app }}-{{ site1_base_url}}/api/employees/fromcache/{{post_employee.json.uuid}}"
         method: POST        
         status_code: 201        
-        return_content: false
+        return_content: true
         validate_certs: false
       register: import_employee
-      failed_when: "'Employee' not in import_employee.json"
+      failed_when: "'Employee' not in import_employee.content"
 
     - pause:
-        prompt: "\n--\nWonderful, from this point on we have the same entity being managed by two totally independent microservices.\nGolang Microservice in site-2 and Net Core Microservice in site-1,\nconnected only by the cache that keeps the latest version of the employee.\n(Press return to continue...)"
+        prompt: "\nWonderful, from this point on we have the same entity being managed by two totally independent microservices.\nGolang Microservice in site-2 and Net Core Microservice in site-1,\nconnected only by the cache that keeps the latest version of the employee.\n(Press return to continue...)"
 
     - pause:
-        prompt: "\n--\nRight now, the most up-to-date version of the employee UUID {{post_employee.json.uuid}} is 1, both the cache and the microservices are with exactly the same version. Let's update this employee to version 2 via the Net Core microservice in site-1.\n(Press return to continue...)"
+        prompt: "\nRight now, the most up-to-date version of the employee UUID {{post_employee.json.uuid}} is 1, both the cache and the microservices are with exactly the same version. Let's update this employee to version 2 via the Net Core microservice in site-1.\n(Press return to continue...)"
+
+    - name: "Get the employee ID created into Net Core microservice in site-1"
+      ansible.builtin.uri:
+        url: "http://{{ dotnet_app }}-{{ site1_base_url}}/api/employees/uuid/{{post_employee.json.uuid}}"
+        method: GET
+        status_code: 200        
+        return_content: false
+        validate_certs: false
+      register: import_employee_id
+      failed_when: "'employeeId' not in import_employee_id.json"
 
     - name: "Updating an employee via the Net Core microservice on site-1"
       ansible.builtin.uri:
-        url: "http://{{ dotnet_app }}-{{ site1_base_url}}/api/employees/{{}}"
+        url: "http://{{ dotnet_app }}-{{ site1_base_url}}/api/employees/{{ import_employee_id.json.employeeId }}"
         method: PUT
         headers:
           Content-Type: application/json
         body_format: json
         body: |-
           {
-            "employeeId": "{{}}"
-            "fullName": "User Test Demo II",
+            "employeeId": "{{ import_employee_id.json.employeeId }}",
+            "fullName": "User Test Demo II  Updated",
             "designation": "RHDG Specialist",
-            "department": "IT"
+            "department": "Marketing"
           }          
-        status_code: 201        
+        status_code: 200
         return_content: false
         validate_certs: false
-      register: post_employee
-      failed_when: "'employeeId' not in post_employee.json"
+      register: put_employee
+      failed_when: "'employeeId' not in put_employee.json"
+
+    - pause:
+        prompt: "\nRight now, the employee UUID {{post_employee.json.uuid}} has version 2 in the Net Core microservice and in the Data Grid and version 1 in the local database of the Golang microservice.\nLet's try to update the version of the golang service and observe the result.\n(Press return to continue...)"
+
+    - name: "Get the employee ID created into Golang microservice in site-2"
+      ansible.builtin.uri:
+        url: "http://{{ golang_app }}-{{ site2_base_url}}/api/employees/uuid/{{post_employee.json.uuid}}"
+        method: GET
+        status_code: 200
+        return_content: false
+        validate_certs: false
+      register: import_employee_id
+      failed_when: "'employeeId' not in import_employee_id.json"
+
+    - name: "Updating the employee {{ import_employee_id.json.employeeId }} in the Golang microservice on site-2"
+      ansible.builtin.uri:
+        url: "http://{{ golang_app }}-{{ site2_base_url}}/api/employees/{{ import_employee_id.json.employeeId }}"
+        method: PUT
+        headers:
+          Content-Type: application/json
+        body_format: json
+        body: |-
+          {
+            "employeeId": "{{ import_employee_id.json.employeeId }}",
+            "fullName": "User Test Demo Must Failed",
+            "designation": "RHDG Specialist",
+            "department": "Fail"
+          }          
+        status_code: 400
+        return_content: true
+        validate_certs: false
+      register: fail_employee      
+
+    - pause:
+        prompt: "\nThe employee update fails with the message:\n{{ fail_employee.content }}.\nExactly the behavior we expect\n(Press return to continue...)"
+
+    - pause:
+        prompt: "\nLet's now import the employee UUID {{ post_employee.json.uuid }} into the Quarkus microservice on site-1\n(Press return to continue...)"
+
+    - name: "Importing the employee UUID {{ post_employee.json.uuid }} into Quarkus microservice on site-1"
+      ansible.builtin.uri:
+        url: "http://{{ quarkus_app }}-{{ site1_base_url}}/api/employees/fromcache/{{ post_employee.json.uuid }}"
+        method: POST        
+        status_code: 201        
+        return_content: true
+        validate_certs: false
+      register: import_employee
+      failed_when: "'Employee' not in import_employee.content"
 
     - name: "Prompt list employees in the quarkus database"
       pause:
-        prompt: "\n--\nNow, let's list the employees present in the Quarkus application database.\n(Press return to continue...)"
+        prompt: "\nNow, let's list the employees present in the Quarkus application database.\n(Press return to continue...)"
     
     - name: "Listing all employees in the Quarkus microservice on site-1"
       ansible.builtin.uri:
@@ -194,5 +252,18 @@
       debug:
         var: employees.content
 
+    - pause:
+        prompt: "\nLet's update the employee UUID {{ post_employee.json.uuid }} in the Golang microservice on site-2\nThen all services will have the same version present in the Data Grid.\n(Press return to continue...)"
+    
+    - name: "Update the employee UUID {{ post_employee.json.uuid }} into Golang microservice on site-2"
+      ansible.builtin.uri:
+        url: "http://{{ golang_app }}-{{ site2_base_url}}/api/employees/fromcache/{{ import_employee_id.json.employeeId }}"
+        method: PUT
+        status_code: 200
+        return_content: false
+        validate_certs: false
+      register: import_employee
+      failed_when: "'Employee' not in import_employee.json"
 
-        
+    - pause:
+        prompt: "\nWith this demo, we introduce Red Hat Data Grid's cross-cluster replication feature\nThe functionality boils down to:\n* Create an employee and publish to the cache.\n* The services import the employee from the cache to your local base using the UUID.\n* Before making any changes to the employee the applications check if they have the most up-to-date version from the cache, thus preventing operations from being performed on outdated entities.\n(Press return to Finish)"

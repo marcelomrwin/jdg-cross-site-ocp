@@ -49,11 +49,13 @@ namespace EmployeeNetCoreApp.Model
 
         public string ToJson()
         {
-            string json = JsonSerializer.Serialize(this);
+            var options = new JsonSerializerOptions() { WriteIndented = true };
+            options.Converters.Add(new CustomDateTimeConverter("yyyy-MM-ddTHH:mm:ss"));
+            string json = JsonSerializer.Serialize(this, options);
             return json;
         }
 
-[JsonPropertyName("uuid")]
+        [JsonPropertyName("uuid")]
         public string? UUID { get; set; }
         [JsonPropertyName("fullName")]
         public string FullName { get; set; }

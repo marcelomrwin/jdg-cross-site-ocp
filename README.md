@@ -1,14 +1,28 @@
 # JDG Cross Site Replication Openshift
 
-```
-docker run --rm --name=infinispan -p 11222:11222 -e USER="user" -e PASS="pass" quay.io/infinispan/server-native:14.0
-docker run -v $(pwd)/infinispan-users:/user-config -e IDENTITIES_BATCH="/user-config/identities.batch" --rm --name=infinispan -p 11222:11222 -e USER="admin" -e PASS="password" quay.io/infinispan/server:14.0 -c infinispan.xml
+To use the ansible playbook you need to configure variables: 
+* site1_base_url: namespace . cluster domain
+* site2_base_url: namespace . cluster domain
+* quarkus_app:  Name of the Quarkus Application.  _Default_: jdg-employee-quarkus
+* dotnet_app:   Name of the Net Core Application. _Default_: jdg-employee-dotnet
+* golang_app:   Name of the Golang Application.   _Default_: jdg-employee-golang
 
-infinispan-cli connect -u user -p pass --trustall http://localhost:11222
-```
 
-## OCP
-**Project:** jdg-cross-site
+To test local download infinispan server from https://infinispan.org/download/
+
+## Openshift
+
+## Create cluster infrastructure
+```
+oc login --token=...
+oc create namespace rhdg-xsite
+oc project rhdg-xsite
+oc create secret -n rhdg-xsite generic --from-file=identities.yaml dg-identities-secret
+cd certs
+./generate-certificate.sh
+oc -n rhdg-xsite create secret generic xsite-keystore "--from-file=keystore.p12=$(pwd)/dg-keystore.p12" "--from-literal=password=secret" "--from-literal=type=pkcs12"
+oc -n rhdg-xsite create secret generic xsite-truststore "--from-file=truststore.p12=$(pwd)/ca-keystore.p12" "--from-literal=password=caSecret"
+```
 
 ```
 oc delete secret -n datagrid dg-identities-secret --ignore-not-found
@@ -23,19 +37,6 @@ oc port-forward $(oc get pods -l app=infinispan-pod -o=custom-columns=NAME:.meta
 https://infinispan.org/docs/infinispan-operator/main/operator.html#operator
 https://infinispan.org/docs/stable/titles/rest/rest.html#rest_server
 http://www.mastertheboss.com/jboss-frameworks/infinispan/infinispan-restful-interface/
-
-
-## Create cluster infrastructure
-```
-oc login --token=...
-oc create namespace rhdg-xsite
-oc project rhdg-xsite
-oc create secret -n rhdg-xsite generic --from-file=identities.yaml dg-identities-secret
-cd certs
-./generate-certificate.sh
-oc -n rhdg-xsite create secret generic xsite-keystore "--from-file=keystore.p12=$(pwd)/dg-keystore.p12" "--from-literal=password=secret" "--from-literal=type=pkcs12"
-oc -n rhdg-xsite create secret generic xsite-truststore "--from-file=truststore.p12=$(pwd)/ca-keystore.p12" "--from-literal=password=caSecret"
-```
 
 ### Create Infinispan Cluster using Operators
 
@@ -126,32 +127,8 @@ spec:
   replicas: 1
 ```  
 
+#### Cache Site 1
 ```yaml
-apiVersion: infinispan.org/v2alpha1
-kind: Cache
-metadata:
-  name: employees
-spec:
-  clusterName: dg
-  name: employees
-  template: |
-    <?xml version="1.0"?>
-    <replicated-cache mode="SYNC">
-        <backups>
-            <backup site="site-2" strategy="SYNC">
-                <take-offline min-wait="120000"/>
-            </backup>
-        </backups>
-        <locking acquire-timeout="0"/>
-        <persistence>
-            <file-store/>
-        </persistence>
-    </replicated-cache>
-  updates:
-    strategy: retain
-
-
----
 apiVersion: infinispan.org/v2alpha1
 kind: Cache
 metadata:  
@@ -184,6 +161,42 @@ spec:
   updates:
     strategy: retain
 ```
+
+#### Cache Site 2
+```yaml
+apiVersion: infinispan.org/v2alpha1
+kind: Cache
+metadata:  
+  name: employees
+  namespace: rhdg-xsite
+spec:
+  clusterName: dg
+  name: employees
+  template: |
+    replicatedCache: 
+      mode: "ASYNC"
+      statistics: "true"
+      encoding: 
+        key: 
+          mediaType: "text/plain; charset=UTF-8"
+        value: 
+          mediaType: "application/json; charset=UTF-8"
+      locking: 
+        isolation: "REPEATABLE_READ"
+        acquireTimeout: "0"
+      expiration: 
+        lifespan: "600000"
+        maxIdle: "300000"
+      backups: 
+        site-1: 
+          backup: 
+            strategy: "SYNC"
+            takeOffline: 
+              minWait: "120000"
+  updates:
+    strategy: retain
+```
+
 
 ## BACKUP
 ```yaml
@@ -256,7 +269,31 @@ status:
   conditions:
     - status: 'True'
       type: Ready
+---
+apiVersion: infinispan.org/v2alpha1
+kind: Cache
+metadata:
+  name: employees
+spec:
+  clusterName: dg
+  name: employees
+  template: |
+    <?xml version="1.0"?>
+    <replicated-cache mode="SYNC">
+        <backups>
+            <backup site="site-2" strategy="SYNC">
+                <take-offline min-wait="120000"/>
+            </backup>
+        </backups>
+        <locking acquire-timeout="0"/>
+        <persistence>
+            <file-store/>
+        </persistence>
+    </replicated-cache>
+  updates:
+    strategy: retain
 ```
+
 
 ### Try to use infinispan docker image
 I couldn't get it to work with docker, according to the page https://github.com/infinispan/infinispan-images we must do some configuration on the clients.
