@@ -17,7 +17,7 @@ public class JDGTest
         this.output = output;
         CacheConfiguration configuration = new CacheConfiguration();
         configuration.Cache = "employees";
-        configuration.Host = "dg-external-jdg-cross-site.apps.ocp4.masales.cloud";
+        configuration.Host = "<DATAGRID-ROUTE>-<SITE1-PROJECT>.<SITE1-DOMAIN>";
         configuration.Protocol = "https";
         configuration.Port = 443;
         configuration.User = "admin";

@@ -120,7 +120,7 @@ spec:
         name: site-2
       locations:
         - name: site-1
-          url: infinispan+xsite://dg-route-site-rhdg-xsite.apps.ocp4.masales.cloud:443          
+          url: infinispan+xsite://<DATAGRID-ROUTE>-<SITE1-PROJECT>.<SITE1-DOMAIN>:443          
     type: DataGrid
   configListener:
     enabled: true

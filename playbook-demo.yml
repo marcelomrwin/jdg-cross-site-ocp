@@ -3,8 +3,8 @@
   hosts: localhost
   connection: local
   vars:
-    site1_base_url: rhdg-xsite.apps.ocp4.masales.cloud
-    site2_base_url: datagrid.apps.ocp4.snoussi.xyz
+    site1_base_url: <SITE1-PROJECT>.<SITE1-DOMAIN>
+    site2_base_url: <SITE2-PROJECT>.<SITE2-DOMAIN>
     quarkus_app: jdg-employee-quarkus
     dotnet_app: jdg-employee-dotnet
     golang_app: jdg-employee-golang
