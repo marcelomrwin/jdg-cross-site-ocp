@@ -1,3 +1,7 @@
+# Employee Net Core 7 Implementation
+
+https://developers.redhat.com/articles/2022/07/07/add-infinispan-cache-your-aspnet-application#add_business_code
+
 ### SQL Server
 ```
 docker run --rm -d --name sqlserver -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Passw0rd1#" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
@@ -32,12 +36,8 @@ dotnet ef migrations add DbInitializationWithSeed (this value must change after 
 dotnet ef database update
 dotnet ef migrations remove
 
-dotnet add package Infinispan.Hotrod.Caching --prerelease (troquei pelo rest client, estava dando bugs demais)
 dotnet add package RestSharp
 ```
-
-https://developers.redhat.com/articles/2022/07/07/add-infinispan-cache-your-aspnet-application#add_business_code
-
 
 ## Build image
 ```

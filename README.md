@@ -120,12 +120,12 @@ spec:
         name: site-2
       locations:
         - name: site-1
-          url: infinispan+xsite://<DATAGRID-ROUTE>-<SITE1-PROJECT>.<SITE1-DOMAIN>:443          
+          url: infinispan+xsite://dg-route-site-rhdg-xsite.apps.ocp4.masales.cloud:443
     type: DataGrid
   configListener:
     enabled: true
   replicas: 1
-```  
+```
 
 #### Cache Site 1
 ```yaml
@@ -196,104 +196,3 @@ spec:
   updates:
     strategy: retain
 ```
-
-
-## BACKUP
-```yaml
-apiVersion: infinispan.org/v2alpha1
-kind: Cache
-metadata:
-  creationTimestamp: '2023-03-17T23:10:45Z'
-  finalizers:
-    - finalizer.infinispan.org
-  generation: 1
-  managedFields:
-    - apiVersion: infinispan.org/v2alpha1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:spec':
-          .: {}
-          'f:clusterName': {}
-          'f:name': {}
-          'f:template': {}
-          'f:updates':
-            .: {}
-            'f:strategy': {}
-      manager: Mozilla
-      operation: Update
-      time: '2023-03-17T23:10:45Z'
-    - apiVersion: infinispan.org/v2alpha1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:metadata':
-          'f:finalizers':
-            .: {}
-            'v:"finalizer.infinispan.org"': {}
-      manager: infinispan-operator
-      operation: Update
-      time: '2023-03-17T23:10:47Z'
-    - apiVersion: infinispan.org/v2alpha1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:status':
-          .: {}
-          'f:conditions': {}
-      manager: infinispan-operator
-      operation: Update
-      subresource: status
-      time: '2023-03-17T23:10:47Z'
-  name: employees
-  namespace: jdg-cross-site
-  resourceVersion: '63362487'
-  uid: 3dfc95a6-21b7-464f-974a-58477d88e849
-spec:
-  clusterName: dg
-  name: employees
-  template: |
-    replicatedCache: 
-      mode: "ASYNC"
-      statistics: "true"
-      encoding: 
-        key: 
-          mediaType: "text/plain; charset=UTF-8"
-        value: 
-          mediaType: "application/json; charset=UTF-8"
-      locking: 
-        isolation: "REPEATABLE_READ"
-      expiration: 
-        lifespan: "600000"
-        maxIdle: "300000"
-  updates:
-    strategy: retain
-status:
-  conditions:
-    - status: 'True'
-      type: Ready
----
-apiVersion: infinispan.org/v2alpha1
-kind: Cache
-metadata:
-  name: employees
-spec:
-  clusterName: dg
-  name: employees
-  template: |
-    <?xml version="1.0"?>
-    <replicated-cache mode="SYNC">
-        <backups>
-            <backup site="site-2" strategy="SYNC">
-                <take-offline min-wait="120000"/>
-            </backup>
-        </backups>
-        <locking acquire-timeout="0"/>
-        <persistence>
-            <file-store/>
-        </persistence>
-    </replicated-cache>
-  updates:
-    strategy: retain
-```
-
-
-### Try to use infinispan docker image
-I couldn't get it to work with docker, according to the page https://github.com/infinispan/infinispan-images we must do some configuration on the clients.
