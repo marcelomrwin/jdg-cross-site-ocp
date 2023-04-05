@@ -1,0 +1,379 @@
+{
+	"info": {
+		"_postman_id": "de11b424-92e4-4b57-a364-bee0c9e974dc",
+		"name": "jdg-cluster-ocp-rest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12557199"
+	},
+	"item": [
+		{
+			"name": "Get All Employees",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Employee",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{        \n    \"fullName\": \"Marcelo Daniel da silva sales\",\n    \"designation\": \"Specialist Solution Architect\",\n    \"department\": \"IT\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Employee",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"employeeId\": \"642368a51ecf62d8939fa86d\",\n    \"fullName\": \"Marcelo Daniel Sales\",\n    \"designation\": \"Senior Specialist Solution Architect\",\n    \"department\": \"Managers\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees/642368a51ecf62d8939fa86d",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees",
+						"642368a51ecf62d8939fa86d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Employee by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees/1",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Employee",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees/2",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Value from Infinispan Cache API",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dg-external-jdg-cross-site.apps.ocp4.masales.cloud/rest/v2/caches/employees/test",
+					"protocol": "https",
+					"host": [
+						"dg-external-jdg-cross-site",
+						"apps",
+						"ocp4",
+						"masales",
+						"cloud"
+					],
+					"path": [
+						"rest",
+						"v2",
+						"caches",
+						"employees",
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List all caches in the cluster",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dg-external-rhdg-xsite.apps.ocp4.masales.cloud/rest/v2/caches",
+					"protocol": "https",
+					"host": [
+						"dg-external-rhdg-xsite",
+						"apps",
+						"ocp4",
+						"masales",
+						"cloud"
+					],
+					"path": [
+						"rest",
+						"v2",
+						"caches"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List all caches in Localhost",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:11222/rest/v2/caches",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "11222",
+					"path": [
+						"rest",
+						"v2",
+						"caches"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check if Key exists in Cache",
+			"request": {
+				"method": "HEAD",
+				"header": [],
+				"url": {
+					"raw": "https://dg-external-jdg-cross-site.apps.ocp4.masales.cloud/rest/v2/caches/employees/7a012b9f-2305-434c-9180-bc88c85a831b",
+					"protocol": "https",
+					"host": [
+						"dg-external-jdg-cross-site",
+						"apps",
+						"ocp4",
+						"masales",
+						"cloud"
+					],
+					"path": [
+						"rest",
+						"v2",
+						"caches",
+						"employees",
+						"7a012b9f-2305-434c-9180-bc88c85a831b"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List All Keys in the Cache",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dg-external-rhdg-xsite.apps.ocp4.masales.cloud/rest/v2/caches/employees?action=keys",
+					"protocol": "https",
+					"host": [
+						"dg-external-rhdg-xsite",
+						"apps",
+						"ocp4",
+						"masales",
+						"cloud"
+					],
+					"path": [
+						"rest",
+						"v2",
+						"caches",
+						"employees"
+					],
+					"query": [
+						{
+							"key": "action",
+							"value": "keys"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List All Keys from App",
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Events in the cluster",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dg-external-jdg-cross-site.apps.ocp4.masales.cloud/rest/v2/caches/employees?action=listen",
+					"protocol": "https",
+					"host": [
+						"dg-external-jdg-cross-site",
+						"apps",
+						"ocp4",
+						"masales",
+						"cloud"
+					],
+					"path": [
+						"rest",
+						"v2",
+						"caches",
+						"employees"
+					],
+					"query": [
+						{
+							"key": "action",
+							"value": "listen"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Employee from cache",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees/fromcache/641cb03d07f948538ea93221",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees",
+						"fromcache",
+						"641cb03d07f948538ea93221"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Employee from cache",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees/fromcache/2049aa36-605b-4b2e-8ca3-d09ba6172f43",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees",
+						"fromcache",
+						"2049aa36-605b-4b2e-8ca3-d09ba6172f43"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Employee By UUID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{api-host}}:{{api-port}}/api/employees/uuid/d874cc1c-5f16-466d-a335-479231045b0f",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{api-host}}"
+					],
+					"port": "{{api-port}}",
+					"path": [
+						"api",
+						"employees",
+						"uuid",
+						"d874cc1c-5f16-466d-a335-479231045b0f"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
